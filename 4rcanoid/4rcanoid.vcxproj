@@ -125,14 +125,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="video\Renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="header.hpp" />
+    <ClInclude Include="objects\Ball.hpp" />
+    <ClInclude Include="objects\GameObject.hpp" />
+    <ClInclude Include="objects\Paddle.hpp" />
     <ClInclude Include="video\ImageLoader.hpp" />
     <ClInclude Include="video\Renderer.hpp" />
     <ClInclude Include="video\SDLSetup.hpp" />
+    <ClInclude Include="video\Timer.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="assets\ball.bmp" />
     <Image Include="assets\paddleGreenHorizontal.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,24 +1,25 @@
 #pragma once
 
 class ImageLoader {
-	std::vector<SDL_Surface*> loadedSurfaces;
+	std::vector<SDL_Texture*> loadedSurfaces;
 	SDL_Window* sdlWindowHandle;
 	public:
 
 		ImageLoader(SDL_Window* m_sdlWindowHandle) : sdlWindowHandle(m_sdlWindowHandle) {}
 
-		SDL_Surface* loadSurface(const std::string& filePath) {
+		SDL_Texture* loadSurface(const std::string& filePath, Renderer& renderer) {
 			SDL_Surface* loadedSurface = SDL_LoadBMP(filePath.c_str());
-			SDL_Surface* screenSurface = SDL_GetWindowSurface(sdlWindowHandle);
-			loadedSurfaces.push_back(loadedSurface);
-			return loadedSurface;
+			SDL_Texture* loadedTexture = SDL_CreateTextureFromSurface(renderer.getSDLRenderer(), loadedSurface);
+			SDL_FreeSurface(loadedSurface);
+			loadedSurfaces.push_back(loadedTexture);
+			return loadedTexture;
 		}
 
 
 
 		void freeSurfaces() const {
 			for (auto& surface : loadedSurfaces) {
-				SDL_FreeSurface(surface);
+				SDL_DestroyTexture(surface);
 			}
 		}
 };
