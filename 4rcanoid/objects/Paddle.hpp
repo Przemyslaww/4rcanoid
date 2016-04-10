@@ -15,7 +15,7 @@ class Paddle : public GameObject {
 				GameObject(m_renderer, imageLoader.loadSurface(g_assetsFolder + "paddle" + paddleColor + "Horizontal.bmp", m_renderer), m_x, m_y, 100, 20),
 				o_x(m_x), o_y(m_y), boundaryArea(m_boundaryArea) {}
 		
-		void moveBy(int m_x, int m_y) {
+		void moveBy(double m_x, double m_y) {
 			if ((m_x > 0 && x + m_x <= o_x + boundaryArea)
 			 || (m_x < 0 && x - m_x >= o_x - boundaryArea)) {
 				x += m_x;
@@ -27,5 +27,7 @@ class Paddle : public GameObject {
 			}
 		}
 
+		void update() {
 
+		}
 };

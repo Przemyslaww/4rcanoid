@@ -5,13 +5,24 @@ class GameObject {
 	Renderer& renderer;
 	SDL_Texture* image;
 
-	int x;
-	int y;
+	double x;
+	double y;
 		
 	unsigned width;
 	unsigned height;
 
 	public:
+		GameObject(Renderer& m_renderer, SDL_Texture* m_image, int m_x, int m_y) : renderer(m_renderer) {
+			image = m_image;
+			x = m_x;
+			y = m_y;
+			int w, h;
+			SDL_QueryTexture(image, NULL, NULL, &w, &h);
+			width = w;
+			height = h;
+			renderer.registerRenderable(this);
+		}
+
 		GameObject(Renderer& m_renderer, SDL_Texture* m_image, int m_x, int m_y, unsigned w, unsigned h) : renderer(m_renderer) {
 			x = m_x;
 			y = m_y;
@@ -21,7 +32,9 @@ class GameObject {
 			renderer.registerRenderable(this);
 		}
 
-		virtual void moveBy(int m_x, int m_y) {
+		virtual void update() = 0;
+
+		virtual void moveBy(double m_x, double m_y) {
 			x += m_x;
 			y += m_y;
 		}

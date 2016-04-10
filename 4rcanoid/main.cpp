@@ -8,7 +8,11 @@ int main(int argc, char* args[])
 	SDL_Event event;
 
 	Paddle paddle(renderer, imageLoader, g_greenColor, 320, 470, 200, true);
-	Ball ball(renderer, imageLoader, 50, 50);
+	std::vector<Block> blocks;
+
+	
+	Ball ball(renderer, imageLoader, 200, 50, 1.0, 0.65);
+	Block greenBlock(renderer, imageLoader, g_greenColor, 100, 100);
 	
 	bool quit = false;
 	Timer timer;
@@ -42,6 +46,8 @@ int main(int argc, char* args[])
 			}
 		}
 		timer.limitFramerate(SCREEN_FPS, SCREEN_TICKS_PER_FRAME);
+		ball.rotateMovementDirectionBy(0.01);
+		ball.update();
 		renderer.refreshScreen();
 	}
 	

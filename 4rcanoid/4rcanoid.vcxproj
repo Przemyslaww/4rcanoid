@@ -130,6 +130,7 @@
   <ItemGroup>
     <ClInclude Include="header.hpp" />
     <ClInclude Include="objects\Ball.hpp" />
+    <ClInclude Include="objects\Block.hpp" />
     <ClInclude Include="objects\GameObject.hpp" />
     <ClInclude Include="objects\Paddle.hpp" />
     <ClInclude Include="video\ImageLoader.hpp" />
@@ -139,6 +140,8 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\ball.bmp" />
+    <Image Include="assets\blockBlue.bmp" />
+    <Image Include="assets\blockGreen.bmp" />
     <Image Include="assets\paddleGreenHorizontal.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

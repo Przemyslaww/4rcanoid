@@ -47,12 +47,21 @@
     <ClInclude Include="objects\Ball.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="objects\Block.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\paddleGreenHorizontal.bmp">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="assets\ball.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\blockGreen.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\blockBlue.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

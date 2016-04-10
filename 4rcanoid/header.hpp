@@ -1,9 +1,9 @@
 #pragma once
 
 #include <SDL.h>
-#include <stdio.h>
 #include <string>
 #include <vector>
+#include <cmath>
 
 const std::string g_assetsFolder = "assets/";
 const std::string g_greenColor = "Green";
@@ -21,4 +21,5 @@ class GameObject;
 #include "objects/GameObject.hpp"
 #include "objects/Paddle.hpp"
 #include "objects/Ball.hpp"
+#include "objects/Block.hpp"
 
