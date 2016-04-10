@@ -11,9 +11,10 @@ class SDLSetup {
 				if (window == NULL) return NULL;
 				return window;
 			}
+			return NULL;
 		}
 
-		static void exit(SDL_Window* window, const ImageLoader& imageLoader = ImageLoader()) {
+		static void exit(SDL_Window* window, const ImageLoader& imageLoader) {
 			imageLoader.freeSurfaces();
 			SDL_DestroyWindow(window);
 			SDL_Quit();
