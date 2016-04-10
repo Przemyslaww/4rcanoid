@@ -4,11 +4,17 @@ class Renderer {
 	SDL_Window* sdlWindowHandle;
 	SDL_Renderer* sdlWindowRenderer;
 	std::vector<GameObject*> renderableGameObjects;
+	SDL_Texture* backgroundImage;
 
 	public:
 		Renderer(SDL_Window* m_sdlWindowHandle) : sdlWindowHandle(m_sdlWindowHandle) {
 			sdlWindowRenderer = SDL_CreateRenderer(sdlWindowHandle, -1, SDL_RENDERER_ACCELERATED);
 			SDL_SetRenderDrawColor(sdlWindowRenderer, 0, 0, 0, 0);
+			backgroundImage = NULL;
+		}
+
+		void addBackgroundImage(SDL_Texture* m_backgroundImage) {
+			backgroundImage = m_backgroundImage;
 		}
 
 		void Renderer::drawSurface(SDL_Texture* surface, int x = 0, int y = 0) {
@@ -27,6 +33,8 @@ class Renderer {
 
 		void Renderer::refreshScreen() {
 			SDL_RenderClear(sdlWindowRenderer);
+			if (backgroundImage)
+				drawSurface(backgroundImage, 0, 0, 0, 0);
 			drawObjects();
 			SDL_RenderPresent(sdlWindowRenderer);
 		}
@@ -50,8 +58,9 @@ class Renderer {
 			stretchRect.y = y;
 			stretchRect.w = width;
 			stretchRect.h = height;
-			//SDL_BlitScaled(surface, NULL, windowSurface, &stretchRect);
-			//SDL_UpdateWindowSurface(sdlWindowHandle);
-			SDL_RenderCopy(sdlWindowRenderer, surface, NULL, &stretchRect);
+			if (stretchRect.x == 0 && stretchRect.y == 0 && stretchRect.w == 0 && stretchRect.h == 0)
+				SDL_RenderCopy(sdlWindowRenderer, surface, NULL, NULL);
+			else 
+				SDL_RenderCopy(sdlWindowRenderer, surface, NULL, &stretchRect);
 		}
 };

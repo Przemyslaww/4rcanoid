@@ -8,11 +8,15 @@ int main(int argc, char* args[])
 	SDL_Event event;
 
 	Paddle paddle(renderer, imageLoader, g_greenColor, 320, 470, 200, true);
-	std::vector<Block> blocks;
-
-	
 	Ball ball(renderer, imageLoader, 200, 50, 1.0, 0.65);
-	Block greenBlock(renderer, imageLoader, g_greenColor, 100, 100);
+	SDL_Texture* backgroundImage = imageLoader.loadSurface(g_assetsFolder + "background.bmp", renderer);
+	renderer.addBackgroundImage(backgroundImage);
+	BlocksGrid blocksGrid(renderer, imageLoader, 50, 50,
+	std::string("#....#\n") +
+				".#..#.\n" +
+				"#.##.#\n" + 
+				".#..#.\n" +
+				"#....#\n");
 	
 	bool quit = false;
 	Timer timer;
@@ -51,6 +55,7 @@ int main(int argc, char* args[])
 		renderer.refreshScreen();
 	}
 	
+	SDL_DestroyTexture(backgroundImage);
 	SDLSetup::exit(window, imageLoader, renderer);
 	return 0;
 }

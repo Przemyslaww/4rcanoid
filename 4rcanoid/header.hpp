@@ -22,4 +22,5 @@ class GameObject;
 #include "objects/Paddle.hpp"
 #include "objects/Ball.hpp"
 #include "objects/Block.hpp"
+#include "objects/BlocksGrid.hpp"
 

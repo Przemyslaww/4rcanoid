@@ -12,6 +12,14 @@ class GameObject {
 	unsigned height;
 
 	public:
+		int getWidth() const {
+			return width;
+		}
+		
+		int getHeight() const {
+			return height;
+		}
+
 		GameObject(Renderer& m_renderer, SDL_Texture* m_image, int m_x, int m_y) : renderer(m_renderer) {
 			image = m_image;
 			x = m_x;
