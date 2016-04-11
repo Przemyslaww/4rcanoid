@@ -125,6 +125,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="tools.cpp" />
     <ClCompile Include="video\Renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -145,6 +146,9 @@
     <Image Include="assets\blockBlue.bmp" />
     <Image Include="assets\blockGreen.bmp" />
     <Image Include="assets\paddleGreenHorizontal.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="levels\test.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -2,26 +2,33 @@
 
 class BlocksGrid {
 	std::vector<Block*> blocks;
-	int x;
-	int y;
 
 	public:
-		BlocksGrid(Renderer& renderer, ImageLoader& imageLoader, int m_x, int m_y, const std::string& blocksDescription) {
-			x = m_x;
-			y = m_y;
+		BlocksGrid(Renderer& renderer, ImageLoader& imageLoader, const std::string& blocksDescription) {
+
+			std::vector<std::string> blockLines = split(blocksDescription, '\n');
+
+			int x = SCREEN_WIDTH/2 + Block::getBlockWidth()/2;
+			int y = SCREEN_HEIGHT/2;
+
 			int offsetX = 0;
-			int offsetY = 0;
-			for (int i = 0; i < blocksDescription.length(); i++) {
-				if (blocksDescription[i] == '\n') {
-					offsetX = 0;
-					offsetY++;
+			int offsetY = -(int)blockLines.size() / 2;
+			for (int i = 0; i < blockLines.size(); i++) {
+
+				int size = blockLines[i].length();
+				offsetX = -size / 2;
+
+				for (int j = 0; j < blockLines[i].length(); j++) {
+					if (blockLines[i][j] == '#') {
+						blocks.push_back(new Block(renderer, imageLoader, g_greenColor,
+							x + offsetX*Block::getBlockWidth(), y + offsetY*Block::getBlockHeight()));
+						offsetX++;
+					}
+					else offsetX++;
 				}
-				else if (blocksDescription[i] == '#') {
-					blocks.push_back(new Block(renderer, imageLoader, g_greenColor,
-						x + offsetX*Block::getBlockWidth(), y + offsetY*Block::getBlockHeight()));
-					offsetX++;
-				}
-				else offsetX++;
+				offsetX = 0;
+				offsetY++;
+				
 			}
 
 		}

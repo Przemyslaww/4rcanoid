@@ -11,7 +11,7 @@ class Block : public GameObject {
 	}
 
 	static int getBlockWidth() {
-		return 50;
+		return 25;
 	}
 
 	static int getBlockHeight() {
