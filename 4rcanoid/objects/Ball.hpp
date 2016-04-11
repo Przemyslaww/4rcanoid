@@ -53,7 +53,7 @@ class Ball : public GameObject {
 		else if (x + moveX < 0 && moveX < 0 && moveY > 0) rotateWithNormal(false);
 		else if (x + moveX > SCREEN_WIDTH && moveX > 0 && moveY < 0) rotateWithNormal(false);
 
-		if (y + moveY < 0 && moveX > 0 && moveY < 0) rotateWithNormal(true);
+		else if (y + moveY < 0 && moveX > 0 && moveY < 0) rotateWithNormal(true);
 		else if (y + moveY > SCREEN_HEIGHT && moveX < 0 && moveY > 0) rotateWithNormal(true);
 		else if (x + moveX < 0 && moveX < 0 && moveY < 0) rotateWithNormal(true);
 		else if (x + moveX > SCREEN_WIDTH && moveX > 0 && moveY > 0) rotateWithNormal(true);
@@ -71,11 +71,40 @@ class Ball : public GameObject {
 	}
 
 	void detectCollisions(Paddle& paddle) {
+		int startX = paddle.getBitmapX();
+		int startY = paddle.getBitmapY();
+		int paddleWidth = paddle.getWidth();
+		int paddleHeight = paddle.getHeight();
 
+		if (x >= startX && y >= startY && x <= startX + paddleWidth && y <= startY + paddleWidth) {
+			if (moveX < 0) rotateWithNormal(true);
+			else rotateWithNormal(false);
+		}
 	}
 
 	void detectCollisions(BlocksGrid& blockGrid) {
-
+		for (auto& block : blockGrid.getBlocks()) {
+			int startX = block->getBitmapX();
+			int startY = block->getBitmapY();
+			int blockWidth = block->getWidth();
+			int blockHeight = block->getHeight();
+			if (x >= startX && y >= startY && x <= startX + blockWidth && y <= startY + blockWidth) {
+				if (moveX > 0 && moveY > 0) {
+					rotateWithNormal(false);
+				}
+				else if (moveX < 0 && moveY > 0) {
+					rotateWithNormal(false);
+				}
+				else if (moveX < 0 && moveY < 0) {
+					rotateWithNormal(true);
+				}
+				else if (moveX > 0 && moveY < 0) {
+					rotateWithNormal(true);
+				}
+				blockGrid.destroyBlock(block);
+				return;
+			}
+		}
 	}
 
 };

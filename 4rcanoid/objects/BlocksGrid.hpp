@@ -33,6 +33,17 @@ class BlocksGrid {
 
 		}
 
+		void destroyBlock(Block* block) {
+			auto it = std::find(blocks.begin(), blocks.end(), block);
+			if (it != blocks.end()) {
+				delete block;
+				blocks.erase(it);
+			}
+		}
+
+		std::vector<Block*>& getBlocks() {
+			return blocks;
+		}
 		
 		~BlocksGrid() {
 			for (auto& block : blocks) {

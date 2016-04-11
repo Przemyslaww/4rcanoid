@@ -16,6 +16,14 @@ class GameObject {
 			return width;
 		}
 		
+		int getBitmapX() const {
+			return x - getWidth() / 2;
+		}
+
+		int getBitmapY() const {
+			return y - getHeight() / 2;
+		}
+
 		int getHeight() const {
 			return height;
 		}
@@ -41,6 +49,8 @@ class GameObject {
 		}
 
 		virtual void update() = 0;
+
+
 
 		virtual void moveBy(double m_x, double m_y) {
 			x += m_x;

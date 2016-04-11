@@ -10,8 +10,6 @@ int main(int argc, char* args[])
 
 	Paddle paddle(renderer, imageLoader, g_greenColor, SCREEN_WIDTH/2, SCREEN_HEIGHT - 10, paddleBoundary, true);
 	Ball ball(renderer, imageLoader, 200, 50, ballSpeed, 0.65);
-	Ball ball2(renderer, imageLoader, 200, 50, ballSpeed, 1);
-	Ball ball3(renderer, imageLoader, 200, 50, ballSpeed, 2);
 	SDL_Texture* backgroundImage = imageLoader.loadSurface(g_assetsFolder + "background.bmp", renderer);
 	renderer.addBackgroundImage(backgroundImage);
 
@@ -59,8 +57,8 @@ int main(int argc, char* args[])
 		}
 		timer.limitFramerate(SCREEN_FPS, SCREEN_TICKS_PER_FRAME);
 		ball.update();
-		ball2.update();
-		ball3.update();
+		ball.detectCollisions(paddle);
+		ball.detectCollisions(blocksGrid);
 		renderer.refreshScreen();
 	}
 	
