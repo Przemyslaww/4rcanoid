@@ -15,6 +15,11 @@ class Ball : public GameObject {
 		moveY = ballSpeed * sin(m_moveAngle);
 	}
 
+	void setMovementAngle(double angle) {
+		moveX = ballSpeed * cos(angle);
+		moveY = ballSpeed * sin(angle);
+	}
+
 	void rotateWithNormal(bool rotateRight) {
 		if (rotateRight) {
 			if (moveX > 0 && moveY > 0) {
@@ -77,6 +82,29 @@ class Ball : public GameObject {
 		int paddleHeight = paddle.getHeight();
 
 		if (x >= startX && y >= startY && x <= startX + paddleWidth && y <= startY + paddleWidth) {
+			/* * /
+			double distanceFromCenter = (x - paddle.getX()) / (double)(paddleWidth / 2); //range from 0 to 1
+			if (distanceFromCenter < 0) {
+				if (moveX < 0) {
+					setMovementAngle(-fabs(distanceFromCenter) * M_PI);
+					
+				}
+				else {
+					setMovementAngle(-fabs(distanceFromCenter) * M_PI * 0.5);
+
+				}
+			}
+			else {
+				if (moveX > 0) {
+					setMovementAngle(fabs(distanceFromCenter) * M_PI);
+
+				}
+				else {
+					setMovementAngle(fabs(distanceFromCenter) * M_PI * 0.5);
+
+				}
+			}
+			/* */
 			if (moveX < 0) rotateWithNormal(true);
 			else rotateWithNormal(false);
 		}

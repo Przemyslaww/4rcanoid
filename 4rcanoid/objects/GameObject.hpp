@@ -24,6 +24,14 @@ class GameObject {
 			return y - getHeight() / 2;
 		}
 
+		double getX() {
+			return x;
+		}
+
+		double getY() {
+			return y;
+		}
+
 		int getHeight() const {
 			return height;
 		}
