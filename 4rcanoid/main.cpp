@@ -9,7 +9,7 @@ int main(int argc, char* args[])
 	SDL_Event event;
 
 	Paddle paddle(renderer, imageLoader, g_greenColor, SCREEN_WIDTH/2, SCREEN_HEIGHT - 10, paddleBoundary, true);
-	Ball ball(renderer, imageLoader, 200, 50, ballSpeed, 0.65);
+	Ball ball(renderer, imageLoader, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 26, ballSpeed, M_PI/4);
 	SDL_Texture* backgroundImage = imageLoader.loadSurface(g_assetsFolder + "background.bmp", renderer);
 	renderer.addBackgroundImage(backgroundImage);
 
@@ -25,6 +25,8 @@ int main(int argc, char* args[])
 	BlocksGrid blocksGrid(renderer, imageLoader, blocksDescription);
 	
 	bool quit = false;
+	bool wToku = false;
+	int zycia = 3;
 	Timer timer;
 
 
@@ -36,10 +38,14 @@ int main(int argc, char* args[])
 					switch (event.key.keysym.sym) {
 					case SDLK_LEFT:
 						paddle.moveBy(-paddleSpeed, 0);
+						if(wToku == false) ball.moveBy(-paddleSpeed, 0);
 						break;
 					case SDLK_RIGHT:
 						paddle.moveBy(paddleSpeed, 0);
+						if (wToku == false) ball.moveBy(paddleSpeed, 0);
 						break;
+					case SDLK_SPACE:
+						if (wToku == false) wToku = true;
 					default:
 						break;
 					}
@@ -57,7 +63,14 @@ int main(int argc, char* args[])
 			}
 		}
 		timer.limitFramerate(SCREEN_FPS, SCREEN_TICKS_PER_FRAME);
-		ball.update();
+		if(wToku == true) ball.update();
+		if (ball.getY() > SCREEN_HEIGHT) {
+			ball.setPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 26);
+			paddle.setPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 10);
+			wToku = false;
+			zycia--;
+			if (zycia == 0) quit = true;
+		}
 		ball.detectCollisions(paddle);
 		ball.detectCollisions(blocksGrid);
 		renderer.refreshScreen();

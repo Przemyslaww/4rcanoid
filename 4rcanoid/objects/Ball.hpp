@@ -56,12 +56,12 @@ class Ball : public GameObject {
 
 	void update() {
 		if (y + moveY < 0 && moveX < 0 && moveY < 0) rotateWithNormal (false);
-		else if (y + moveY > SCREEN_HEIGHT && moveX > 0 && moveY > 0) setPosition(50, 50);
+		/*else if ((y + moveY > SCREEN_HEIGHT && moveX > 0 && moveY > 0) || (y + moveY > SCREEN_HEIGHT && moveX < 0 && moveY > 0)) {
+			paddle
+		}*/
 		else if (x + moveX < 0 && moveX < 0 && moveY > 0) rotateWithNormal(false);
 		else if (x + moveX > SCREEN_WIDTH && moveX > 0 && moveY < 0) rotateWithNormal(false);
-
 		else if (y + moveY < 0 && moveX > 0 && moveY < 0) rotateWithNormal(true);
-		else if (y + moveY > SCREEN_HEIGHT && moveX < 0 && moveY > 0) setPosition(50, 50);
 		else if (x + moveX < 0 && moveX < 0 && moveY < 0) rotateWithNormal(true);
 		else if (x + moveX > SCREEN_WIDTH && moveX > 0 && moveY > 0) rotateWithNormal(true);
 
