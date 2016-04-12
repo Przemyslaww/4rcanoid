@@ -69,7 +69,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\Przemek\Documents\Visual Studio 2015\Projects\4rcanoid\SDL\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\SDL\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>C:\Users\Przemek\Documents\Visual Studio 2015\Projects\4rcanoid\SDL\include;$(IncludePath)</IncludePath>
@@ -81,7 +81,7 @@
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\Users\Przemek\Documents\Visual Studio 2015\Projects\4rcanoid\SDL\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\SDL\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -125,6 +125,37 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="tools.cpp" />
+    <ClCompile Include="video\Renderer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="header.hpp" />
+    <ClInclude Include="objects\Ball.hpp" />
+    <ClInclude Include="objects\Block.hpp" />
+    <ClInclude Include="objects\BlocksGrid.hpp" />
+    <ClInclude Include="objects\GameObject.hpp" />
+    <ClInclude Include="objects\Paddle.hpp" />
+    <ClInclude Include="video\ImageLoader.hpp" />
+    <ClInclude Include="video\Renderer.hpp" />
+    <ClInclude Include="video\SDLSetup.hpp" />
+    <ClInclude Include="video\Timer.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\background.bmp" />
+    <Image Include="assets\backgroundmenu.bmp" />
+    <Image Include="assets\ball.bmp" />
+    <Image Include="assets\blockBlue.bmp" />
+    <Image Include="assets\blockGray.bmp" />
+    <Image Include="assets\blockGreen.bmp" />
+    <Image Include="assets\blockRed.bmp" />
+    <Image Include="assets\blockYellow.bmp" />
+    <Image Include="assets\paddleBlueHorizontal.bmp" />
+    <Image Include="assets\paddleGreenHorizontal.bmp" />
+    <Image Include="assets\paddleRedHorizontal.bmp" />
+    <Image Include="assets\paddleYellowHorizontal.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="levels\test.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
