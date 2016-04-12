@@ -19,8 +19,23 @@ class BlocksGrid {
 				offsetX = -size / 2;
 
 				for (int j = 0; j < blockLines[i].length(); j++) {
-					if (blockLines[i][j] == '#') {
+					if (blockLines[i][j] == 'g') {
 						blocks.push_back(new Block(renderer, imageLoader, g_greenColor,
+							x + offsetX*Block::getBlockWidth(), y + offsetY*Block::getBlockHeight()));
+						offsetX++;
+					}
+					else if (blockLines[i][j] == 'y') {
+						blocks.push_back(new Block(renderer, imageLoader, g_yellowColor,
+							x + offsetX*Block::getBlockWidth(), y + offsetY*Block::getBlockHeight()));
+						offsetX++;
+					}
+					else if (blockLines[i][j] == 'r') {
+						blocks.push_back(new Block(renderer, imageLoader, g_redColor,
+							x + offsetX*Block::getBlockWidth(), y + offsetY*Block::getBlockHeight()));
+						offsetX++;
+					}
+					else if (blockLines[i][j] == 'b') {
+						blocks.push_back(new Block(renderer, imageLoader, g_blueColor,
 							x + offsetX*Block::getBlockWidth(), y + offsetY*Block::getBlockHeight()));
 						offsetX++;
 					}

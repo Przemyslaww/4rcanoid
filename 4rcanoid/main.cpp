@@ -27,6 +27,7 @@ int main(int argc, char* args[])
 	bool quit = false;
 	Timer timer;
 
+
 	while (!quit) {
 		timer.start();
 		SDL_PollEvent(&event); {

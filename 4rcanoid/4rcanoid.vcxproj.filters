@@ -73,6 +73,27 @@
     <Image Include="assets\background.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="assets\backgroundmenu.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\blockGray.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\blockRed.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\blockYellow.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\paddleBlueHorizontal.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\paddleRedHorizontal.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\paddleYellowHorizontal.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Text Include="levels\test.txt" />

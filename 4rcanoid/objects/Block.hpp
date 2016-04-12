@@ -11,11 +11,11 @@ class Block : public GameObject {
 	}
 
 	static int getBlockWidth() {
-		return 25;
+		return 30;
 	}
 
 	static int getBlockHeight() {
-		return 25;
+		return 30;
 	}
 
 	void update() {

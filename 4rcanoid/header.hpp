@@ -9,12 +9,15 @@
 
 const std::string g_assetsFolder = "assets/";
 const std::string g_greenColor = "Green";
+const std::string g_blueColor = "Blue";
+const std::string g_redColor = "Red";
+const std::string g_yellowColor = "Yellow";
 
 const unsigned SCREEN_FPS = 60;
 const unsigned SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
 
-const unsigned SCREEN_WIDTH = 720;
-const unsigned SCREEN_HEIGHT = 720;
+const unsigned SCREEN_WIDTH = 700;
+const unsigned SCREEN_HEIGHT = 700;
 
 const unsigned paddleWidth = 100;
 const unsigned paddleHeight = 20;
