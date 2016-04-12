@@ -52,17 +52,20 @@ class Ball : public GameObject {
 		}
 	}
 
+	
+
 	void update() {
 		if (y + moveY < 0 && moveX < 0 && moveY < 0) rotateWithNormal (false);
-		else if (y + moveY > SCREEN_HEIGHT && moveX > 0 && moveY > 0) rotateWithNormal(false);
+		else if (y + moveY > SCREEN_HEIGHT && moveX > 0 && moveY > 0) setPosition(50, 50);
 		else if (x + moveX < 0 && moveX < 0 && moveY > 0) rotateWithNormal(false);
 		else if (x + moveX > SCREEN_WIDTH && moveX > 0 && moveY < 0) rotateWithNormal(false);
 
 		else if (y + moveY < 0 && moveX > 0 && moveY < 0) rotateWithNormal(true);
-		else if (y + moveY > SCREEN_HEIGHT && moveX < 0 && moveY > 0) rotateWithNormal(true);
+		else if (y + moveY > SCREEN_HEIGHT && moveX < 0 && moveY > 0) setPosition(50, 50);
 		else if (x + moveX < 0 && moveX < 0 && moveY < 0) rotateWithNormal(true);
 		else if (x + moveX > SCREEN_WIDTH && moveX > 0 && moveY > 0) rotateWithNormal(true);
 
+		
 		moveBy(moveX, moveY);
 		
 	}
@@ -81,32 +84,19 @@ class Ball : public GameObject {
 		int paddleWidth = paddle.getWidth();
 		int paddleHeight = paddle.getHeight();
 
-		if (x >= startX && y >= startY && x <= startX + paddleWidth && y <= startY + paddleWidth) {
-			/* * /
-			double distanceFromCenter = (x - paddle.getX()) / (double)(paddleWidth / 2); //range from 0 to 1
-			if (distanceFromCenter < 0) {
-				if (moveX < 0) {
-					setMovementAngle(-fabs(distanceFromCenter) * M_PI);
-					
-				}
-				else {
-					setMovementAngle(-fabs(distanceFromCenter) * M_PI * 0.5);
+		if (x + moveX >= startX && y + moveY >= startY && x + moveX <= startX + paddleWidth) {
+			double pozycja = paddle.getX();
+			double PROMIEN_PILKA = Ball::getWidth() / 2;
+			double promien = paddle.getWidth() / 2;
+			double predkosc = sqrt((moveX*moveX) + (moveY*moveY));
+			double kx = ((pozycja - getX()) / ((PROMIEN_PILKA + promien) / predkosc));
+			double ky = sqrt((predkosc * predkosc) - (kx * kx));
+			moveX = -kx;
+			moveY = -fabs(ky);
+			//y = SCREEN_HEIGHT - startY + paddleHeight;
 
-				}
-			}
-			else {
-				if (moveX > 0) {
-					setMovementAngle(fabs(distanceFromCenter) * M_PI);
-
-				}
-				else {
-					setMovementAngle(fabs(distanceFromCenter) * M_PI * 0.5);
-
-				}
-			}
-			/* */
-			if (moveX < 0) rotateWithNormal(true);
-			else rotateWithNormal(false);
+			//if (moveX < 0) rotateWithNormal(true);
+			//else rotateWithNormal(false);
 		}
 	}
 

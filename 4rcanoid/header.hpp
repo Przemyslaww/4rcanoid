@@ -27,7 +27,7 @@ const double NINETY_DEGREES = M_PI * 0.5;
 const double ballSpeed = 6.0;
 const int paddleSpeed = 6;
 
-const unsigned wallWidth = SCREEN_WIDTH/4;
+const unsigned wallWidth = 0;
 const unsigned paddleBoundary = SCREEN_WIDTH / 2 - paddleWidth / 2 - wallWidth;
 
 

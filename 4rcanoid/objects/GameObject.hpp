@@ -12,6 +12,12 @@ class GameObject {
 	unsigned height;
 
 	public:
+
+		void setPosition(int m_x, int m_y) {
+			x = m_x;
+			y = m_y;
+		}
+
 		int getWidth() const {
 			return width;
 		}
