@@ -3,9 +3,8 @@
 class Ball : public GameObject {
 
 	double ballSpeed;
-
-	double moveX;
-	double moveY;
+	public: double moveX;
+	public: double moveY;
 
 	public:
 	Ball(Renderer& renderer, ImageLoader& imageLoader, int m_x, int m_y, double m_ballSpeed = 1.0, double m_moveAngle = 0.0) : 
@@ -52,20 +51,29 @@ class Ball : public GameObject {
 		}
 	}
 
+	void angle() {
+		double tmp = moveX;
+		moveX = moveY;
+		moveY = -1 * tmp;		
+	}
 	
-
 	void update() {
+		double nextX = x + moveX;
+		double nextY = y + moveY;
 		if (y + moveY < 0 && moveX < 0 && moveY < 0) rotateWithNormal (false);
-		/*else if ((y + moveY > SCREEN_HEIGHT && moveX > 0 && moveY > 0) || (y + moveY > SCREEN_HEIGHT && moveX < 0 && moveY > 0)) {
-			paddle
-		}*/
+
 		else if (x + moveX < 0 && moveX < 0 && moveY > 0) rotateWithNormal(false);
 		else if (x + moveX > SCREEN_WIDTH && moveX > 0 && moveY < 0) rotateWithNormal(false);
 		else if (y + moveY < 0 && moveX > 0 && moveY < 0) rotateWithNormal(true);
 		else if (x + moveX < 0 && moveX < 0 && moveY < 0) rotateWithNormal(true);
 		else if (x + moveX > SCREEN_WIDTH && moveX > 0 && moveY > 0) rotateWithNormal(true);
-
 		
+		else if (nextX >= 0 && nextX <= wallWidth && nextY >= 0 && nextY <= wallWidth && (nextY + nextX) <= wallWidth) angle(); //rotateWithNormal(true);
+		else if (nextX >= 0 && nextX <= wallWidth && nextY >= (SCREEN_HEIGHT - wallWidth) && nextY <= SCREEN_HEIGHT && (nextY - nextX) >= (SCREEN_HEIGHT - wallWidth)) angle(); // rotateWithNormal(true);
+		//felerny
+		else if (nextX >= (SCREEN_WIDTH - wallWidth) && nextX <= SCREEN_WIDTH && nextY >= 0 && nextY <= wallWidth && (nextY - nextX) <= (wallWidth - SCREEN_HEIGHT)) angle(); // rotateWithNormal(true);
+		else if (nextX >= (SCREEN_WIDTH - wallWidth) && nextX <= SCREEN_WIDTH && nextY >= (SCREEN_HEIGHT - wallWidth) && (nextY <= SCREEN_HEIGHT) && (nextX + nextY) >= (SCREEN_HEIGHT + SCREEN_WIDTH - wallWidth)) angle(); // rotateWithNormal(true);
+
 		moveBy(moveX, moveY);
 		
 	}
@@ -83,20 +91,68 @@ class Ball : public GameObject {
 		int startY = paddle.getBitmapY();
 		int paddleWidth = paddle.getWidth();
 		int paddleHeight = paddle.getHeight();
+		if (paddle.isHorizontal)
+		{
+			if (paddle.choosen)	//down
+			{
+				if (x + moveX >= startX && y + moveY >= startY && x + moveX <= startX + paddleWidth) {
+					double position = paddle.getX();
+					double BALL_RADIUS = Ball::getWidth() / 2;
+					double radius = paddle.getWidth() / 2;
+					double velocity = sqrt((moveX*moveX) + (moveY*moveY));
+					double kx = ((position - getX()) / ((BALL_RADIUS + radius) / velocity));
+					double ky = sqrt((velocity * velocity) - (kx * kx));
+					moveX = -kx;
+					moveY = -fabs(ky);
+				}
+			}
+			else	//up
+			{
+				if (x + moveX >= startX && y + moveY <= startY + paddleHeight && x + moveX <= startX + paddleWidth) {
+					double position = paddle.getX();
+					double BALL_RADIUS = Ball::getWidth() / 2;
+					double radius = paddle.getWidth() / 2;
+					double velocity = sqrt((moveX*moveX) + (moveY*moveY));
+					double kx = ((position - getX()) / ((BALL_RADIUS + radius) / velocity));
+					double ky = sqrt((velocity * velocity) - (kx * kx));
+					moveX = -kx;
+					moveY = fabs(ky);
+				}
+			}
+		}
+		else
+		{
 
-		if (x + moveX >= startX && y + moveY >= startY && x + moveX <= startX + paddleWidth) {
-			double pozycja = paddle.getX();
-			double PROMIEN_PILKA = Ball::getWidth() / 2;
-			double promien = paddle.getWidth() / 2;
-			double predkosc = sqrt((moveX*moveX) + (moveY*moveY));
-			double kx = ((pozycja - getX()) / ((PROMIEN_PILKA + promien) / predkosc));
-			double ky = sqrt((predkosc * predkosc) - (kx * kx));
-			moveX = -kx;
-			moveY = -fabs(ky);
-			//y = SCREEN_HEIGHT - startY + paddleHeight;
-
-			//if (moveX < 0) rotateWithNormal(true);
-			//else rotateWithNormal(false);
+			startX = paddle.getX() - paddle.getHeight() /2;
+			startY = paddle.getY() - paddle.getWidth() /2;
+			int paddleWidthN = paddle.getHeight();
+			int paddleHeightN = paddle.getWidth();
+			if (paddle.choosen)	//	left
+			{
+				if (y + moveY >= startY && x + moveX <= startX + paddleWidthN && y + moveY <= startY + paddleHeightN) {
+					double position = paddle.getY();
+					double BALL_RADIUS = Ball::getWidth() / 2;
+					double radius = paddle.getWidth() / 2;
+					double velocity = sqrt((moveX*moveX) + (moveY*moveY));
+					double ky = ((position - getY()) / ((BALL_RADIUS + radius) / velocity));
+					double kx = sqrt((velocity * velocity) - (ky * ky));
+					moveX = fabs(kx);
+					moveY = -ky;
+				}
+			}
+			else	//	right
+			{
+				if (y + moveY >= startY && x + moveX >= startX  && y + moveY <= startY + paddleHeightN) {
+					double position = paddle.getY();
+					double BALL_RADIUS = Ball::getWidth() / 2;
+					double radius = paddle.getWidth() / 2;
+					double velocity = sqrt((moveX*moveX) + (moveY*moveY));
+					double ky = ((position - getY()) / ((BALL_RADIUS + radius) / velocity));
+					double kx = sqrt((velocity * velocity) - (ky * ky));
+					moveX = -fabs(kx);
+					moveY = -ky;
+				}
+			}
 		}
 	}
 
@@ -106,18 +162,12 @@ class Ball : public GameObject {
 			int startY = block->getBitmapY();
 			int blockWidth = block->getWidth();
 			int blockHeight = block->getHeight();
-			if (x >= startX && y >= startY && x <= startX + blockWidth && y <= startY + blockWidth) {
-				if (moveX > 0 && moveY > 0) {
-					rotateWithNormal(false);
+			if (x + moveX >= startX && y + moveY >= startY && x + moveX <= startX + blockWidth && y + moveY <= startY + blockHeight) {
+				if ((x < startX || x > startX + blockWidth) && y > startY && y < startY + blockHeight) {
+					moveX *= -1;
 				}
-				else if (moveX < 0 && moveY > 0) {
-					rotateWithNormal(false);
-				}
-				else if (moveX < 0 && moveY < 0) {
-					rotateWithNormal(true);
-				}
-				else if (moveX > 0 && moveY < 0) {
-					rotateWithNormal(true);
+				if ((y < startY || y > startY + blockHeight) && x > startX && x < startX + blockWidth) {
+					moveY *= -1;
 				}
 				blockGrid.destroyBlock(block);
 				return;

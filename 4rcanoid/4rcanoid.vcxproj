@@ -72,7 +72,7 @@
     <IncludePath>..\SDL\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\Przemek\Documents\Visual Studio 2015\Projects\4rcanoid\SDL\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\SDL\include;..\SDL\include;..\SDLttf\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -93,8 +93,9 @@
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\Users\Przemek\Documents\Visual Studio 2015\Projects\4rcanoid\SDL\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\SDL\lib\x64;..\SDLttf\lib\x64;C:\Users\Przemek\Documents\Visual Studio 2015\Projects\4rcanoid\SDL\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -129,7 +130,10 @@
     <ClCompile Include="video\Renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="gui\TextBox.hpp" />
+    <ClInclude Include="gui\TextInputDialog.hpp" />
     <ClInclude Include="header.hpp" />
+    <ClInclude Include="network\NetworkConnection.hpp" />
     <ClInclude Include="objects\Ball.hpp" />
     <ClInclude Include="objects\Block.hpp" />
     <ClInclude Include="objects\BlocksGrid.hpp" />
@@ -143,6 +147,8 @@
   <ItemGroup>
     <Image Include="assets\background.bmp" />
     <Image Include="assets\backgroundmenu.bmp" />
+    <Image Include="assets\backgroundmenuclient.bmp" />
+    <Image Include="assets\backgroundmenuserver.bmp" />
     <Image Include="assets\ball.bmp" />
     <Image Include="assets\blockBlue.bmp" />
     <Image Include="assets\blockGray.bmp" />
@@ -156,6 +162,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="levels\test.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="assets\font.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

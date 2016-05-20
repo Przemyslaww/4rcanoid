@@ -56,6 +56,15 @@
     <ClInclude Include="objects\BlocksGrid.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gui\TextInputDialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\TextBox.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="network\NetworkConnection.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\paddleGreenHorizontal.bmp">
@@ -94,8 +103,17 @@
     <Image Include="assets\paddleYellowHorizontal.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="assets\backgroundmenuclient.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\backgroundmenuserver.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Text Include="levels\test.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="assets\font.ttf" />
   </ItemGroup>
 </Project>
