@@ -83,13 +83,16 @@
     <ClInclude Include="network\messages\messages_ids.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="network\messages\MessagePlayerHandlers.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="network\messages\NetworkMessageHandler.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="network\ClientNetworkTask.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="network\messages\MessageHandlers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="network\messages\MessageReceiverSender.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

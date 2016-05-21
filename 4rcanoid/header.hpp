@@ -30,6 +30,11 @@ const std::string g_blueColor = "Blue";
 const std::string g_redColor = "Red";
 const std::string g_yellowColor = "Yellow";
 
+const char PLAYER_DOWN_NUMBER = 0;
+const char PLAYER_UP_NUMBER = 1;
+const char PLAYER_LEFT_NUMBER = 2;
+const char PLAYER_RIGHT_NUMBER = 3;
+
 enum PROGRAM_STATE {PROGRAM_EXIT, PROGRAM_SERVER, PROGRAM_CLIENT};
 enum GAME_STATE {GAME_LOBBY, GAME_PLAY};
 
@@ -88,15 +93,19 @@ extern std::string intToStr(const int& arg);
 #include "gui/TextBox.hpp"
 
 #include "network/GameContext.hpp"
-#include "network/messages/NetworkMessageHandler.hpp"
+
+class NetworkMessageHandler;
 
 extern std::unordered_map<char, NetworkMessageHandler*> messagesHandlers;
 
 #include "network/messages/messages_ids.hpp"
+#include "network/messages/NetworkMessageHandler.hpp"
+#include "network/messages/MessageReceiverSender.hpp"
 #include "network/ServerNetworkTask.hpp"
 #include "network/ClientNetworkTask.hpp"
 #include "network/Server.hpp"
 #include "network/Client.hpp"
+
 
 
 

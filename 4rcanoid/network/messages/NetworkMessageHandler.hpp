@@ -6,4 +6,4 @@ class NetworkMessageHandler {
 		virtual void execute(const std::string&, GameContext&, SOCKET) = 0;
 };
 
-#include "MessagePlayerHandlers.hpp"
+#include "MessageHandlers.hpp"

@@ -14,45 +14,25 @@ class ServerNetworkTask {
 	GameContext& gameContext;
 
 	char peerPlayerNumber;
-	char playerNumber;
 
-	static std::string getPeerIp(SOCKET socket) {
-		sockaddr client_info = { 0 };
-		int addrsize = sizeof(client_info);
-		getpeername(socket, &client_info, &addrsize);
-		return inet_ntoa(((sockaddr_in*)&client_info)->sin_addr);
+	static std::string receiveMessage(SOCKET m_connectionSocket) {
+		return MessageReceiverSender::receiveMessage(m_connectionSocket);
 	}
 
-	static std::string getLocalIp(SOCKET socket) {
-		sockaddr client_info = { 0 };
-		int addrsize = sizeof(client_info);
-		getsockname(socket, &client_info, &addrsize);
-		return inet_ntoa(((sockaddr_in*)&client_info)->sin_addr);
+	static void sendMessage(SOCKET m_connectionSocket, const char& messageType, const std::string& message) {
+		MessageReceiverSender::sendMessage(m_connectionSocket, messageType, message);
 	}
 
-	static void sendMessage(SOCKET socket, char messageType, const std::string& message) {
-		char buffer[BUFFER_SIZE];
-		buffer[0] = messageType;
-		for (int i = 0; i < message.length(); i++) {
-			buffer[i + 1] = message[i];
-		}
-		buffer[message.length()+1] = 0;
-		int iSendResult = send(socket, buffer, message.length(), 0);
-		if (iSendResult == SOCKET_ERROR) {
-			closesocket(socket);
-			WSACleanup();
-			throw NetworkException("Send failed: " + intToStr(WSAGetLastError()));
-		}
+	static std::string getPeerIp(SOCKET m_connectionSocket) {
+		return MessageReceiverSender::getPeerIp(m_connectionSocket);
 	}
 
-	static std::string receiveMessage(SOCKET socket) {
-		char buffer[BUFFER_SIZE] = {0};
-		int iResult = recv(socket, buffer, BUFFER_SIZE, 0);
-		return buffer;
+	static std::string getLocalIp(SOCKET m_connectionSocket) {
+		return MessageReceiverSender::getLocalIp(m_connectionSocket);
 	}
 
 	static void taskJobTCPIn(SOCKET m_connectionSocket, GameContext& gameContext,
-		const char& playerNumber, const char& peerPlayerNumber) {
+		const char& peerPlayerNumber) {
 		std::string receivedMessage;
 		while (true) {
 			receivedMessage = receiveMessage(m_connectionSocket);
@@ -67,19 +47,22 @@ class ServerNetworkTask {
 	}
 
 	static void taskJobTCPOut(SOCKET m_connectionSocket, GameContext& gameContext,
-		const char& playerNumber, const char& peerPlayerNumber) {
+		const char& peerPlayerNumber) {
 		while (true) {
 			while (gameContext.getGameState() != GAME_LOBBY);
 			gameContext.addPlayer(getPeerIp(m_connectionSocket));
-			//send blocks description to client when player joins the game
-			sendMessage(m_connectionSocket, MESSAGE_PLAYER_ACCEPTED, gameContext.getBlocksDescription());
+			sendMessage(m_connectionSocket, MESSAGE_PLAYER_ACCEPTED, peerPlayerNumber + "|" + gameContext.getBlocksDescription());
+			while (gameContext.getGameState() == GAME_LOBBY);
+			sendMessage(m_connectionSocket, MESSAGE_GAME_START, "");
+			while (gameContext.getGameState() == GAME_PLAY);
+			sendMessage(m_connectionSocket, MESSAGE_GAME_INTERRUPTED, "");
 			while (true);
 		}
 		
 	}
 
 	static void taskJobUDPIn(SOCKET m_connectionSocket, GameContext& gameContext,
-		const char& playerNumber, const char& peerPlayerNumber) {
+		const char& peerPlayerNumber) {
 		std::string receivedMessage;
 		while (true) {
 			receivedMessage = receiveMessage(m_connectionSocket);
@@ -104,29 +87,29 @@ class ServerNetworkTask {
 	}
 
 	static void taskJobUDPOut(SOCKET m_connectionSocket, GameContext& gameContext,
-		const char& playerNumber, const char& peerPlayerNumber) {
+		const char& peerPlayerNumber) {
 		while (true) {
 			SDL_Event event = gameContext.getCurrentSDLEvent();
 			switch (event.type) {
 			case SDL_KEYDOWN:
 				switch (event.key.keysym.sym) {
 				case SDLK_LEFT:
-					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_LEFT) + playerNumber);
+					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_LEFT) + gameContext.getPlayerNumber());
 					break;
 				case SDLK_RIGHT:
-					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_RIGHT) + playerNumber);
+					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_RIGHT) + gameContext.getPlayerNumber());
 					break;
 				case SDLK_DOWN:
-					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_DOWN) + playerNumber);
+					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_DOWN) + gameContext.getPlayerNumber());
 					break;
 				case SDLK_UP:
-					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_UP) + playerNumber);
+					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_UP) + gameContext.getPlayerNumber());
 					break;
 				case SDLK_ESCAPE:
-					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_ESCAPE) + playerNumber);
+					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_ESCAPE) + gameContext.getPlayerNumber());
 					break;
 				case SDLK_SPACE:
-					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_SPACE) + playerNumber);
+					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_SPACE) + gameContext.getPlayerNumber());
 					break;
 				default:
 					break;
@@ -142,8 +125,7 @@ class ServerNetworkTask {
 	
 	public:
 		ServerNetworkTask(SOCKET m_connectionSocketTCPin, SOCKET m_connectionSocketUDPin,
-			SOCKET m_connectionSocketTCPout, SOCKET m_connectionSocketUDPout, GameContext& m_gameContext,
-			const char& m_playerNumber, const char& m_peerPlayerNumber) : gameContext(m_gameContext) {
+			SOCKET m_connectionSocketTCPout, SOCKET m_connectionSocketUDPout, GameContext& m_gameContext, const char& m_peerPlayerNumber) : gameContext(m_gameContext) {
 			connectionSocketTCPin = m_connectionSocketTCPin;
 			connectionSocketUDPin = m_connectionSocketUDPin;
 			connectionSocketTCPout = m_connectionSocketTCPout;
@@ -153,7 +135,6 @@ class ServerNetworkTask {
 			taskThreadTCPout = NULL;
 			taskThreadUDPout = NULL;
 			peerPlayerNumber = m_peerPlayerNumber;
-			playerNumber = m_playerNumber;
 		}
 
 		~ServerNetworkTask() {
@@ -164,10 +145,10 @@ class ServerNetworkTask {
 		}
 
 		void run() {
-			taskThreadTCPin  = new std::thread(ServerNetworkTask::taskJobTCPIn, connectionSocketTCPin, gameContext, playerNumber, peerPlayerNumber);
-			taskThreadUDPin  = new std::thread(ServerNetworkTask::taskJobUDPIn, connectionSocketUDPin, gameContext, playerNumber, peerPlayerNumber);
-			taskThreadTCPout = new std::thread(ServerNetworkTask::taskJobTCPOut, connectionSocketTCPout, gameContext, playerNumber, peerPlayerNumber);
-			taskThreadUDPout = new std::thread(ServerNetworkTask::taskJobUDPOut, connectionSocketUDPout, gameContext, playerNumber, peerPlayerNumber);
+			taskThreadTCPin  = new std::thread(ServerNetworkTask::taskJobTCPIn, connectionSocketTCPin, gameContext, peerPlayerNumber);
+			taskThreadUDPin  = new std::thread(ServerNetworkTask::taskJobUDPIn, connectionSocketUDPin, gameContext, peerPlayerNumber);
+			taskThreadTCPout = new std::thread(ServerNetworkTask::taskJobTCPOut, connectionSocketTCPout, gameContext, peerPlayerNumber);
+			taskThreadUDPout = new std::thread(ServerNetworkTask::taskJobUDPOut, connectionSocketUDPout, gameContext, peerPlayerNumber);
 		}
 
 		void notifyGameStateUpdate(const GAME_STATE& updatedGameState) {

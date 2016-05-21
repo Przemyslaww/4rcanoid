@@ -137,8 +137,9 @@
     <ClInclude Include="network\Client.hpp" />
     <ClInclude Include="network\ClientNetworkTask.hpp" />
     <ClInclude Include="network\GameContext.hpp" />
+    <ClInclude Include="network\messages\MessageReceiverSender.hpp" />
     <ClInclude Include="network\messages\message.hpp" />
-    <ClInclude Include="network\messages\MessagePlayerHandlers.hpp" />
+    <ClInclude Include="network\messages\MessageHandlers.hpp" />
     <ClInclude Include="network\messages\messages_ids.hpp" />
     <ClInclude Include="network\messages\NetworkMessageHandler.hpp" />
     <ClInclude Include="network\Server.hpp" />

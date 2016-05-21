@@ -3,6 +3,9 @@
 const char MESSAGE_PLAYER_ACCEPTED = 0;
 const char MESSAGE_PLAYER_KICKED = 1;
 const char MESSAGE_PLAYER_PRESSED_KEY = 2;
+const char MESSAGE_GAME_START = 3;
+const char MESSAGE_GAME_INTERRUPTED = 4;
+const char MESSAGE_PLAYER_JOIN_APPEAL = 5;
 
 const char LEFT_KEY = 0;
 const char RIGHT_KEY = 1;

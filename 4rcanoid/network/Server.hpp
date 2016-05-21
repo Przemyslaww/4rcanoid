@@ -150,7 +150,7 @@ class Server {
 					players++;
 					//server is always player of number 0
 					networkTasks.push_back(new ServerNetworkTask(clientSocketTCPin, clientSocketUDPin,
-						clientSocketTCPout, clientSocketUDPout, gameContext, 0, players));
+						clientSocketTCPout, clientSocketUDPout, gameContext, players));
 					networkTasks[networkTasks.size() - 1]->run();
 				}
 				else {

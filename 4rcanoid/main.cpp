@@ -4,7 +4,8 @@ std::unordered_map<char, NetworkMessageHandler*> messagesHandlers;
 
 void initMessagesHandlers() {
 	messagesHandlers.emplace(MESSAGE_PLAYER_ACCEPTED, new MessagePlayerAcceptedHandler());
-	messagesHandlers.emplace(MESSAGE_PLAYER_KICKED  , new MessagePlayerKickedHandler()  );
+	messagesHandlers.emplace(MESSAGE_GAME_START  , new MessageGameStartHandler()  );
+	messagesHandlers.emplace(MESSAGE_GAME_INTERRUPTED, new MessageGameInterruptedHandler());
 	messagesHandlers.emplace(MESSAGE_PLAYER_PRESSED_KEY, new MessagePlayerPressedKeyHandler());
 }
 

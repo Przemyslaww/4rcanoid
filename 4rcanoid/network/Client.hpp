@@ -93,10 +93,13 @@ class Client {
 		}
 
 		void makeConnectionToServer() {
+			gameContext.displayMessage("Connecting to server...");
 			connectToSocket(tcpConnectSocketOut, &hintsTCPout, resultTCPout);
 			connectToSocket(udpConnectSocketOut, &hintsUDPout, resultUDPout);
 			connectToSocket(tcpConnectSocketIn, &hintsUDPin, resultUDPin);
 			connectToSocket(udpConnectSocketIn, &hintsUDPin, resultUDPin);
+			clientNetworkTask = new ClientNetworkTask(tcpConnectSocketIn, udpConnectSocketIn, tcpConnectSocketOut, udpConnectSocketOut, gameContext);
+			gameContext.displayMessage("Waiting for other players...");
 		}
 
 	
