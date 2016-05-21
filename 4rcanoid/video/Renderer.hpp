@@ -22,12 +22,14 @@ class Renderer {
 		}
 
 		void drawRect(const int& x, const int& y, const int& w, const int& h, const SDL_Color& color) {
+			SDL_SetRenderDrawColor(sdlWindowRenderer, color.r, color.g, color.b, color.a);
 			SDL_Rect rect;
 			rect.x = x;
 			rect.y = y;
 			rect.w = w;
 			rect.h = h;
 			SDL_RenderFillRect(sdlWindowRenderer, &rect);
+			SDL_SetRenderDrawColor(sdlWindowRenderer, 0, 0, 0, 0);
 		}
 
 		void drawText(const std::string& text, const int& x, const int& y, const SDL_Color& color) {

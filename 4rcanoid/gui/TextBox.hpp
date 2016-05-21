@@ -13,6 +13,7 @@ class TextBox {
 	public:
 		void redraw() {
 			auto lines = split(text,  '\n');
+			renderer.drawRect(x-1, y-1, w+2, h+2, textColor);
 			renderer.drawRect(x, y, w, h, boxColor);
 			int i = 0;
 			for (auto& line : lines) {

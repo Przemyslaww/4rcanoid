@@ -7,6 +7,22 @@
 #include <cmath>
 #include <fstream>
 #include <sstream>
+#include <thread>
+#include <unordered_map>
+
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#include <stdio.h>
+
+#pragma comment(lib, "Ws2_32.lib")
 
 const std::string g_assetsFolder = "assets/";
 const std::string g_greenColor = "Green";
@@ -15,8 +31,16 @@ const std::string g_redColor = "Red";
 const std::string g_yellowColor = "Yellow";
 
 enum PROGRAM_STATE {PROGRAM_EXIT, PROGRAM_SERVER, PROGRAM_CLIENT};
+enum GAME_STATE {GAME_LOBBY, GAME_PLAY};
 
-const SDL_Color whiteColorSDL = {255, 255, 255, 0 };
+const int DEFAULT_SERVER_PORT_TCP_IN = 27015;
+const int DEFAULT_SERVER_PORT_UDP_IN = 27016;
+const int DEFAULT_SERVER_PORT_TCP_OUT = 27017;
+const int DEFAULT_SERVER_PORT_UDP_OUT = 27018;
+const int BUFFER_SIZE = 64;
+const int MAX_PLAYERS = 4;
+
+const SDL_Color whiteColorSDL = {127, 127, 127, 0 };
 const SDL_Color blackColorSDL = {0,0,0,0};
 
 const unsigned SCREEN_FPS = 60;
@@ -42,7 +66,12 @@ class GameObject;
 class Block;
 
 extern std::vector<std::string> split(const std::string& astr, char c);
+extern std::string charToOneCharString(const char& arg);
+extern std::string intToStr(const int& arg);
 
+
+
+#include "exceptions/NetworkException.hpp"
 
 #include "video/Timer.hpp"
 #include "video/Renderer.hpp"
@@ -58,6 +87,16 @@ extern std::vector<std::string> split(const std::string& astr, char c);
 #include "gui/TextInputDialog.hpp"
 #include "gui/TextBox.hpp"
 
-#include "network/NetworkConnection.hpp"
+#include "network/GameContext.hpp"
+#include "network/messages/NetworkMessageHandler.hpp"
+
+extern std::unordered_map<char, NetworkMessageHandler*> messagesHandlers;
+
+#include "network/messages/messages_ids.hpp"
+#include "network/ServerNetworkTask.hpp"
+#include "network/Server.hpp"
+#include "network/Client.hpp"
+
+
 
 

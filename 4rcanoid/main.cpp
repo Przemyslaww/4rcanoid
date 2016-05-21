@@ -1,5 +1,26 @@
 #include "header.hpp"
 
+std::unordered_map<char, NetworkMessageHandler*> messagesHandlers;
+
+void initMessagesHandlers() {
+	messagesHandlers.emplace(MESSAGE_PLAYER_ACCEPTED, new MessagePlayerAcceptedHandler());
+	messagesHandlers.emplace(MESSAGE_PLAYER_KICKED  , new MessagePlayerKickedHandler()  );
+	messagesHandlers.emplace(MESSAGE_PLAYER_PRESSED_KEY, new MessagePlayerPressedKeyHandler());
+}
+
+void removeMessageHandlers() {
+	for (auto& it : messagesHandlers) {
+		delete it.second;
+	}
+}
+
+void exit(SDL_Window* window, ImageLoader& imageLoader, Renderer& renderer) {
+	SDLSetup::exit(window, imageLoader, renderer);
+	removeMessageHandlers();
+}
+
+
+
 PROGRAM_STATE showMainMenu(ImageLoader& imageLoader, SDL_Window* window, Renderer& renderer) {
 	SDL_Event event_menu;
 	SDL_Texture* backgroundImageServer = imageLoader.loadSurface(g_assetsFolder + "backgroundmenuserver.bmp", renderer);
@@ -54,6 +75,11 @@ PROGRAM_STATE showMainMenu(ImageLoader& imageLoader, SDL_Window* window, Rendere
 		{
 			renderer.drawSurface(backgroundImageClient, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 		}
+		renderer.drawText("4RCANOID alpha 0.0.26", 10, 10, whiteColorSDL);
+		renderer.drawText("LazySnails Studio", 10, SCREEN_HEIGHT - 90, whiteColorSDL);
+		renderer.drawText("Sebastian Makowski", 10, SCREEN_HEIGHT - 70, whiteColorSDL);
+		renderer.drawText("Przemyslaw Mikulski", 10, SCREEN_HEIGHT - 50, whiteColorSDL);
+		renderer.drawText("Michal Krezymon", 10, SCREEN_HEIGHT - 30, whiteColorSDL);
 		SDL_RenderPresent(renderer.getSDLRenderer());
 
 		timer.limitFramerate(SCREEN_FPS, SCREEN_TICKS_PER_FRAME);
@@ -111,7 +137,7 @@ std::string getInputFromUser(const std::string& message, ImageLoader& imageLoade
 	return serverInfoInputDialog.getInput();
 }
 
-std::vector<NetworkConnection> listenForPlayers(ImageLoader& imageLoader, SDL_Window* window, Renderer& renderer) {
+void listenForPlayers(ImageLoader& imageLoader, SDL_Window* window, Renderer& renderer) {
 	SDL_Event event_menu;
 	SDL_Texture* backgroundImage = imageLoader.loadSurface(g_assetsFolder + "background.bmp", renderer);
 
@@ -129,10 +155,10 @@ std::vector<NetworkConnection> listenForPlayers(ImageLoader& imageLoader, SDL_Wi
 			case SDL_KEYDOWN:
 				switch (event_menu.key.keysym.sym) {
 				case SDLK_RETURN:
-					return {};
+					return;
 					break;
 				case SDLK_ESCAPE:
-					return {};
+					return;
 					break;
 				default:
 					break;
@@ -143,7 +169,7 @@ std::vector<NetworkConnection> listenForPlayers(ImageLoader& imageLoader, SDL_Wi
 				break;
 
 			case SDL_QUIT:
-				return {};
+				return;
 				break;
 
 			default:
@@ -157,7 +183,7 @@ std::vector<NetworkConnection> listenForPlayers(ImageLoader& imageLoader, SDL_Wi
 		SDL_RenderPresent(renderer.getSDLRenderer());
 		timer.limitFramerate(SCREEN_FPS, SCREEN_TICKS_PER_FRAME);
 	}
-	return {};
+	return;
 }
 
 int main(int argc, char* args[])
@@ -166,20 +192,14 @@ int main(int argc, char* args[])
 	ImageLoader imageLoader(window);
 	Renderer renderer(window);
 	SDL_Event event;
-
+	initMessagesHandlers();
 	std::string serverIp;
-	std::string serverPort;
-
+	
 	PROGRAM_STATE programState = showMainMenu(imageLoader, window, renderer);
 	if (programState == PROGRAM_CLIENT) {
 		serverIp = getInputFromUser("Server IP address", imageLoader, window, renderer);
 		if (serverIp == "") {
-			SDLSetup::exit(window, imageLoader, renderer);
-			return 0;
-		}
-		serverPort = getInputFromUser("Server port", imageLoader, window, renderer);
-		if (serverPort == "") {
-			SDLSetup::exit(window, imageLoader, renderer);
+			exit(window, imageLoader, renderer);
 			return 0;
 		}
 	}
@@ -187,7 +207,7 @@ int main(int argc, char* args[])
 		listenForPlayers(imageLoader, window, renderer);
 	}
 	else {
-		SDLSetup::exit(window, imageLoader, renderer);
+		exit(window, imageLoader, renderer);
 		return 0;
 	}
 	Timer timer;
@@ -288,6 +308,6 @@ int main(int argc, char* args[])
 	}
 	
 	SDL_DestroyTexture(backgroundImage);
-	SDLSetup::exit(window, imageLoader, renderer);
+	exit(window, imageLoader, renderer);
 	return 0;
 }

@@ -4,6 +4,17 @@ double n_rand() {
 	return rand() / RAND_MAX;
 }
 
+std::string intToStr(const int& arg) {
+	std::ostringstream ss;
+	ss << arg;
+	std::string str = ss.str();
+	return str;
+}
+
+std::string charToOneCharString(const char& arg) {
+	return "" + arg;
+}
+
 std::vector<std::string> split(const std::string& astr, char c = ' ')
 {
 	std::vector<std::string> result;

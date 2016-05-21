@@ -130,10 +130,18 @@
     <ClCompile Include="video\Renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="exceptions\NetworkException.hpp" />
     <ClInclude Include="gui\TextBox.hpp" />
     <ClInclude Include="gui\TextInputDialog.hpp" />
     <ClInclude Include="header.hpp" />
-    <ClInclude Include="network\NetworkConnection.hpp" />
+    <ClInclude Include="network\Client.hpp" />
+    <ClInclude Include="network\GameContext.hpp" />
+    <ClInclude Include="network\messages\message.hpp" />
+    <ClInclude Include="network\messages\MessagePlayerHandlers.hpp" />
+    <ClInclude Include="network\messages\messages_ids.hpp" />
+    <ClInclude Include="network\messages\NetworkMessageHandler.hpp" />
+    <ClInclude Include="network\Server.hpp" />
+    <ClInclude Include="network\ServerNetworkTask.hpp" />
     <ClInclude Include="objects\Ball.hpp" />
     <ClInclude Include="objects\Block.hpp" />
     <ClInclude Include="objects\BlocksGrid.hpp" />

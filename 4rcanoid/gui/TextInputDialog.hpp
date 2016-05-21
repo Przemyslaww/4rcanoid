@@ -32,6 +32,7 @@ class TextInputDialog {
 		}
 
 		void redraw() {
+			renderer.drawRect(x - 1, y - 1, w + 2, h + 2, textColor);
 			renderer.drawRect(x, y, w, h, boxColor);
 			renderer.drawText(message, x + 10, y + 10, textColor);
 			renderer.drawText(std::string(text) + "_", x + 10, y + 30, textColor);
