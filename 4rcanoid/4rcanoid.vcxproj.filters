@@ -62,9 +62,6 @@
     <ClInclude Include="gui\TextBox.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="network\NetworkConnection.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="network\Server.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -86,10 +83,13 @@
     <ClInclude Include="network\messages\messages_ids.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="network\ConnectionFactory.hpp">
+    <ClInclude Include="network\messages\MessagePlayerHandlers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="network\NetworkMessageHandler.h">
+    <ClInclude Include="network\messages\NetworkMessageHandler.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="network\ClientNetworkTask.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

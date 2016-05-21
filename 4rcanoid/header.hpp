@@ -94,6 +94,7 @@ extern std::unordered_map<char, NetworkMessageHandler*> messagesHandlers;
 
 #include "network/messages/messages_ids.hpp"
 #include "network/ServerNetworkTask.hpp"
+#include "network/ClientNetworkTask.hpp"
 #include "network/Server.hpp"
 #include "network/Client.hpp"
 

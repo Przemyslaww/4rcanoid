@@ -107,7 +107,6 @@ class Server {
 				WSACleanup();
 				throw NetworkException(std::string("Socket shutdown failed: ") + intToStr(WSAGetLastError()));
 			}
-
 		}
 
 		//this delegates consecutive connections to separate threads
