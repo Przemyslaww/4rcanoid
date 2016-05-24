@@ -9,7 +9,8 @@ class MessagePlayerAcceptedHandler : public NetworkMessageHandler {
 				auto pos = message.find("|");      
 				std::string str = message.substr(pos + 1);
 				gameContext.setBlocksFromDescription(message);
-			}
+				gameContext.displayMessage("Waiting for other players...");
+			} 
 		}
 };
 

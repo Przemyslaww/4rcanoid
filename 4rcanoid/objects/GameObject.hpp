@@ -50,7 +50,6 @@ class GameObject {
 			SDL_QueryTexture(image, NULL, NULL, &w, &h);
 			width = w;
 			height = h;
-			renderer.registerRenderable(this);
 		}
 
 		GameObject(Renderer& m_renderer, SDL_Texture* m_image, int m_x, int m_y, unsigned w, unsigned h) : renderer(m_renderer) {
@@ -59,7 +58,6 @@ class GameObject {
 			width = w;
 			height = h;
 			image = m_image;
-			renderer.registerRenderable(this);
 		}
 
 		virtual void update() = 0;

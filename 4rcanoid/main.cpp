@@ -138,28 +138,76 @@ std::string getInputFromUser(const std::string& message, ImageLoader& imageLoade
 	return serverInfoInputDialog.getInput();
 }
 
-void listenForPlayers(ImageLoader& imageLoader, SDL_Window* window, Renderer& renderer) {
-	SDL_Event event_menu;
-	SDL_Texture* backgroundImage = imageLoader.loadSurface(g_assetsFolder + "background.bmp", renderer);
+void clientProgram(GameContext& gameContext) {
 
-	bool quit1 = false;
-	bool serverChosen = false;
+}
+
+
+
+void serverProgram(GameContext& gameContext) {
+	SDL_Texture* backgroundImage = gameContext.getImageLoader()->loadSurface(g_assetsFolder + "background.bmp", *gameContext.getRenderer());
+
+	bool quit = false;
 	Timer timer;
 
-	TextBox playersListTextBox(SCREEN_WIDTH/2 - 600/2, SCREEN_HEIGHT/2 - 500/2, 600, 500, whiteColorSDL, blackColorSDL, renderer, "Listening on 252.128.10.53, port 50252\nPlayers list:\n\n252.128.10.53 ");
 
-	while (!quit1) {
+	Server server(gameContext);
+	try {
+		server.initialize();
+		server.createServerSockets();
+		server.bindSockets();
+		server.listenOnSockets();
+	}
+	catch (NetworkException& e) {
+		gameContext.setTextInPlayersBox("An application encountered an unexpected error: \n"
+			+ e.getMessage() + 
+			"\n\nFor further help please contact us:\n przmiku1@gmail.com\n");
+	}
+	
+	std::thread acceptThread([&]() {
+		server.acceptConnections();
+	});
+
+	while (!quit) {
 
 		timer.start();
-		SDL_PollEvent(&event_menu); {
-			switch (event_menu.type) {
+		SDL_PollEvent(gameContext.getCurrentSDLEventPointer()); {
+			switch (gameContext.getCurrentSDLEvent().type) {
 			case SDL_KEYDOWN:
-				switch (event_menu.key.keysym.sym) {
+				switch (gameContext.getCurrentSDLEvent().key.keysym.sym) {
+				case SDLK_UP:
+					if (gameContext.getPlayerNumber() == PLAYER_RIGHT_NUMBER)
+						gameContext.getRightPaddle()->moveBy(0, -paddleSpeed);
+					else if (gameContext.getPlayerNumber() == PLAYER_LEFT_NUMBER)
+						gameContext.getLeftPaddle()->moveBy(0, -paddleSpeed);
+
+					break;
+				case SDLK_DOWN:
+					if (gameContext.getPlayerNumber() == PLAYER_RIGHT_NUMBER)
+						gameContext.getRightPaddle()->moveBy(0, paddleSpeed);
+					else if (gameContext.getPlayerNumber() == PLAYER_LEFT_NUMBER)
+						gameContext.getLeftPaddle()->moveBy(0, paddleSpeed);
+
+					break;
+				case SDLK_RIGHT:
+					if (gameContext.getPlayerNumber() == PLAYER_DOWN_NUMBER)
+						gameContext.getDownPaddle()->moveBy(paddleSpeed, 0);
+					else if (gameContext.getPlayerNumber() == PLAYER_UP_NUMBER)
+						gameContext.getUpPaddle()->moveBy(paddleSpeed, 0);
+
+					break;
+				case SDLK_LEFT:
+					if (gameContext.getPlayerNumber() == PLAYER_DOWN_NUMBER)
+						gameContext.getDownPaddle()->moveBy(-paddleSpeed, 0);
+					else if (gameContext.getPlayerNumber() == PLAYER_UP_NUMBER)
+						gameContext.getUpPaddle()->moveBy(-paddleSpeed, 0);
+
+					break;
 				case SDLK_RETURN:
-					return;
+
 					break;
 				case SDLK_ESCAPE:
-					return;
+					quit = true;
 					break;
 				default:
 					break;
@@ -170,7 +218,7 @@ void listenForPlayers(ImageLoader& imageLoader, SDL_Window* window, Renderer& re
 				break;
 
 			case SDL_QUIT:
-				return;
+				quit = true;
 				break;
 
 			default:
@@ -178,12 +226,36 @@ void listenForPlayers(ImageLoader& imageLoader, SDL_Window* window, Renderer& re
 			}
 		}
 
-		SDL_RenderClear(renderer.getSDLRenderer());
-		renderer.drawSurface(backgroundImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-		playersListTextBox.redraw();
-		SDL_RenderPresent(renderer.getSDLRenderer());
+		SDL_RenderClear(gameContext.getRenderer()->getSDLRenderer());
+		gameContext.getRenderer()->drawSurface(backgroundImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+		if (gameContext.getGameState() == GAME_LOBBY) {
+			//drawing when in lobby
+			gameContext.getPlayersListTextBox()->redraw();
+		}
+		else if (gameContext.getGameState() == GAME_PLAY) {
+			//drawing when in actual gameplay
+			gameContext.getLeftPaddle()->draw();
+			gameContext.getRightPaddle()->draw();
+			gameContext.getDownPaddle()->draw();
+			gameContext.getUpPaddle()->draw();
+			gameContext.getBlocksGrid()->draw();
+			for (int i = 0; i < gameContext.getBalls()->size(); i++) {
+				gameContext.getBalls()->at(i).draw();
+				gameContext.getBalls()->at(i).detectCollisions(*gameContext.getLeftPaddle());
+				gameContext.getBalls()->at(i).detectCollisions(*gameContext.getRightPaddle());
+				gameContext.getBalls()->at(i).detectCollisions(*gameContext.getUpPaddle());
+				gameContext.getBalls()->at(i).detectCollisions(*gameContext.getDownPaddle());
+				gameContext.getBalls()->at(i).detectCollisions(*gameContext.getBlocksGrid());
+				gameContext.getBalls()->at(i).update();
+			}
+
+		}
+			
+		SDL_RenderPresent(gameContext.getRenderer()->getSDLRenderer());
 		timer.limitFramerate(SCREEN_FPS, SCREEN_TICKS_PER_FRAME);
 	}
+	server.stop();
+	acceptThread.join();
 	return;
 }
 
@@ -204,10 +276,7 @@ int main(int argc, char* args[])
 			return 0;
 		}
 	}
-	else if (programState == PROGRAM_SERVER) {
-		listenForPlayers(imageLoader, window, renderer);
-	}
-	else {
+	else if (programState == PROGRAM_EXIT) {
 		exit(window, imageLoader, renderer);
 		return 0;
 	}
@@ -216,9 +285,9 @@ int main(int argc, char* args[])
 	Paddle paddleLeft(renderer, imageLoader, g_blueColor, 10, SCREEN_HEIGHT/2, false, paddleBoundary, true);
 	Paddle paddleUp(renderer, imageLoader, g_redColor, SCREEN_WIDTH / 2, 10, true, paddleBoundary, false);
 	Paddle paddleRight(renderer, imageLoader, g_yellowColor, SCREEN_WIDTH - 10, SCREEN_HEIGHT / 2, false, paddleBoundary, false);
-	Ball ball(renderer, imageLoader, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 26, ballSpeed, M_PI/4);
-	SDL_Texture * backgroundImage = imageLoader.loadSurface(g_assetsFolder + "background2.bmp", renderer);
-	renderer.addBackgroundImage(backgroundImage);
+	std::vector<Ball> balls = {
+		Ball(renderer, imageLoader, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 26, ballSpeed, M_PI / 4)
+	};
 
 	std::ifstream file("levels/test.txt");
 	std::string blocksDescription;
@@ -235,80 +304,22 @@ int main(int argc, char* args[])
 	bool wToku = false;
 	int zycia = 3;
 	
-	
+	GAME_STATE gameState = GAME_LOBBY;
 
-	while (!quit) {
-		timer.start();
-		SDL_PollEvent(&event); {
-			switch (event.type) {
-				case SDL_KEYDOWN:
-					switch (event.key.keysym.sym) {
-					case SDLK_LEFT:
-						paddleDown.moveBy(-paddleSpeed, 0);
-						paddleUp.moveBy(-paddleSpeed, 0);
-						if(wToku == false && paddleDown.getX() > paddleBoundary - 48) ball.moveBy(-paddleSpeed, 0); 
-						break;
-					case SDLK_RIGHT:
-						paddleDown.moveBy(paddleSpeed, 0);
-						paddleUp.moveBy(paddleSpeed, 0);
-						if (wToku == false && paddleDown.getX() < SCREEN_WIDTH - paddleBoundary + 48) ball.moveBy(paddleSpeed, 0);
-						break;
-					case SDLK_DOWN:
-						paddleLeft.moveBy( 0, paddleSpeed);
-						paddleRight.moveBy(0, paddleSpeed);
-						break;
-					case SDLK_UP:
-						paddleLeft.moveBy(0, -paddleSpeed);
-						paddleRight.moveBy(0, -paddleSpeed);
-						break;
-					case SDLK_ESCAPE:
-						quit = true;
-						break;
-					case SDLK_SPACE:
-						if (wToku == false) {
-							wToku = true;
-							ball.moveX = 6*cos(M_PI / 4);
-							ball.moveY = 6*sin(M_PI / 4);
-						}
-						break;
-					case SDLK_z:
-						if (wToku == false) {
+	char playerNumber = 0;
 
-						}
-					default:
-						break;
-					}
-										
-					break;
-				case SDL_KEYUP:
-					break;
+	TextBox playersListTextBox(SCREEN_WIDTH / 2 - 600 / 2, SCREEN_HEIGHT / 2 - 500 / 2, 600, 500, whiteColorSDL, blackColorSDL, renderer, "");
+	GameContext gameContext(window, blocksDescription, &programState, &renderer,
+		&imageLoader, &playersListTextBox, &gameState, &event, &playerNumber,
+		&paddleLeft, &paddleRight, &paddleUp, &paddleDown, &blocksGrid, &balls);
 
-				case SDL_QUIT:
-					quit = true;
-					break;
-
-				default:
-					break;
-			}
-		}
-		timer.limitFramerate(SCREEN_FPS, SCREEN_TICKS_PER_FRAME);
-		if(wToku == true) ball.update();
-		if (ball.getY() > SCREEN_HEIGHT) {
-			ball.setPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 26);
-			paddleDown.setPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 10);
-			wToku = false;
-			//zycia--;
-			if (zycia == 0) quit = true;
-		}
-		ball.detectCollisions(paddleDown);
-		ball.detectCollisions(paddleRight);
-		ball.detectCollisions(paddleLeft);
-		ball.detectCollisions(paddleUp);
-		ball.detectCollisions(blocksGrid);
-		renderer.refreshScreen();
+	if (programState == PROGRAM_SERVER) {
+		serverProgram(gameContext);
 	}
-	
-	SDL_DestroyTexture(backgroundImage);
+	else if (programState == PROGRAM_CLIENT) {
+		clientProgram(gameContext);
+	}
+
 	exit(window, imageLoader, renderer);
 	return 0;
 }

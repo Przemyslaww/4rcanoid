@@ -26,8 +26,8 @@ class MessageReceiverSender {
 			int iSendResult = send(socket, buffer, message.length(), 0);
 			if (iSendResult == SOCKET_ERROR) {
 				closesocket(socket);
-				WSACleanup();
 				throw NetworkException("Send failed: " + intToStr(WSAGetLastError()));
+				WSACleanup();
 			}
 		}
 

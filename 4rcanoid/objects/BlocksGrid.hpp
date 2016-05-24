@@ -104,6 +104,12 @@ class BlocksGrid {
 
 		}
 
+		void draw() {
+			for (auto& block : blocks) {
+				block->draw();
+			}
+		}
+
 		std::vector<Block*>& getBlocks() {
 			return blocks;
 		}

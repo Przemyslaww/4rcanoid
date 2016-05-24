@@ -88,7 +88,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
@@ -126,11 +126,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="network\Client.cpp" />
+    <ClCompile Include="network\Server.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="video\Renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="collections\ThreadSafeStack.hpp" />
     <ClInclude Include="exceptions\NetworkException.hpp" />
+    <ClInclude Include="gui\PlayersTextBox.hpp" />
     <ClInclude Include="gui\TextBox.hpp" />
     <ClInclude Include="gui\TextInputDialog.hpp" />
     <ClInclude Include="header.hpp" />

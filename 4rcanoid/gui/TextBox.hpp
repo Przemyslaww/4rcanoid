@@ -2,6 +2,8 @@
 
 class TextBox {
 
+	protected:
+
 	std::string text;
 
 	int x, y, w, h;
@@ -33,8 +35,15 @@ class TextBox {
 			h = m_h;
 		}
 
-		void setText(const std::string m_text) {
+		void setText(const std::string& m_text) {
 			text = m_text;
+		}
+
+		void removeTextLine(const std::string& m_line) {
+			size_t nFPos = text.find(m_line);
+			size_t secondNL = text.find('\n', nFPos);
+			size_t firstNL = text.rfind('\n', nFPos);
+			text.erase(firstNL, secondNL - firstNL);
 		}
 
 		std::string getText() {

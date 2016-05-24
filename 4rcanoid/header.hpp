@@ -9,6 +9,7 @@
 #include <sstream>
 #include <thread>
 #include <unordered_map>
+#include <mutex>
 
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
@@ -39,7 +40,7 @@ enum PROGRAM_STATE {PROGRAM_EXIT, PROGRAM_SERVER, PROGRAM_CLIENT};
 enum GAME_STATE {GAME_LOBBY, GAME_PLAY};
 
 const int DEFAULT_SERVER_PORT_TCP_IN = 27015;
-const int DEFAULT_SERVER_PORT_UDP_IN = 27016;
+const int DEFAULT_SERVER_PORT_UDP_IN = 27019;
 const int DEFAULT_SERVER_PORT_TCP_OUT = 27017;
 const int DEFAULT_SERVER_PORT_UDP_OUT = 27018;
 const int BUFFER_SIZE = 64;
@@ -76,6 +77,8 @@ extern std::string intToStr(const int& arg);
 
 
 
+#include "collections/ThreadSafeStack.hpp"
+
 #include "exceptions/NetworkException.hpp"
 
 #include "video/Timer.hpp"
@@ -91,6 +94,7 @@ extern std::string intToStr(const int& arg);
 
 #include "gui/TextInputDialog.hpp"
 #include "gui/TextBox.hpp"
+#include "gui/PlayersTextBox.hpp"
 
 #include "network/GameContext.hpp"
 
@@ -101,11 +105,15 @@ extern std::unordered_map<char, NetworkMessageHandler*> messagesHandlers;
 #include "network/messages/messages_ids.hpp"
 #include "network/messages/NetworkMessageHandler.hpp"
 #include "network/messages/MessageReceiverSender.hpp"
-#include "network/ServerNetworkTask.hpp"
-#include "network/ClientNetworkTask.hpp"
+
+class ServerNetworkTask;
+class ClientNetworkTask;
+
 #include "network/Server.hpp"
 #include "network/Client.hpp"
 
+#include "network/ServerNetworkTask.hpp"
+#include "network/ClientNetworkTask.hpp"
 
 
 
