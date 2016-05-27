@@ -1,37 +1,39 @@
 #include "../header.hpp"
 
 void Client::createSocket(SOCKET& m_socket, addrinfo& hints, addrinfo*& result, const std::string& ipAddress, const IPPROTO& protocol, const int& port) {
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = protocol;
-	hints.ai_flags = AI_PASSIVE;
 
-	int iResult = getaddrinfo(ipAddress.c_str(), intToStr(port).c_str(), &hints, &result);
-	if (iResult != 0) {
-		WSACleanup();
-		throw NetworkException(std::string("getaddrinfo failed: ") + intToStr(iResult));
-	}
-	m_socket = INVALID_SOCKET;
-	m_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-	if (m_socket == INVALID_SOCKET) {
-		freeaddrinfo(result);
-		WSACleanup();
-		throw NetworkException(std::string("Error at socket(): ") + intToStr(WSAGetLastError()));
-	}
+		ZeroMemory(&hints, sizeof(hints));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = protocol == IPPROTO_TCP ? SOCK_STREAM : SOCK_DGRAM;
+		hints.ai_protocol = protocol;
+
+		int iResult = getaddrinfo(ipAddress.c_str(), intToStr(port).c_str(), &hints, &result);
+		if (iResult != 0) {
+			throw NetworkException(std::string("getaddrinfo failed: ") + intToStr(iResult));
+			WSACleanup();
+		}
+		m_socket = INVALID_SOCKET;
+		m_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+		if (m_socket == INVALID_SOCKET) {
+			freeaddrinfo(result);
+			throw NetworkException(std::string("Error at socket TCP: ") + intToStr(WSAGetLastError()));
+			WSACleanup();
+		}
+
 }
 
 void Client::connectToSocket(SOCKET& m_socket, addrinfo* ptr, addrinfo* result) {
-	int iResult = connect(m_socket, ptr->ai_addr, (int)ptr->ai_addrlen);
+	int iResult = connect(m_socket, result->ai_addr, (int)result->ai_addrlen);
 	if (iResult == SOCKET_ERROR) {
+		throw NetworkException("Unable to connect to server! Error: " + intToStr(WSAGetLastError()));
 		closesocket(m_socket);
 		m_socket = INVALID_SOCKET;
 	}
 	freeaddrinfo(result);
 
 	if (m_socket == INVALID_SOCKET) {
+		throw NetworkException("Unable to connect to server! Error: " + intToStr(WSAGetLastError()));
 		WSACleanup();
-		throw NetworkException("Unable to connect to server!");
 	}
 }
 
@@ -59,16 +61,39 @@ void Client::connectToSocket(SOCKET& m_socket, addrinfo* ptr, addrinfo* result) 
 			int iResult = shutdown(m_socket, SD_SEND);
 			if (iResult == SOCKET_ERROR) {
 				closesocket(m_socket);
-				WSACleanup();
 				throw NetworkException(std::string("Socket shutdown failed: ") + intToStr(WSAGetLastError()));
+				WSACleanup();
 			}
 		}
 
 		void Client::makeConnectionToServer() {
-			gameContext.displayMessage("Connecting to server...");
-			connectToSocket(tcpConnectSocketOut, &hintsTCPout, resultTCPout);
-			connectToSocket(udpConnectSocketOut, &hintsUDPout, resultUDPout);
-			connectToSocket(tcpConnectSocketIn, &hintsUDPin, resultUDPin);
-			connectToSocket(udpConnectSocketIn, &hintsUDPin, resultUDPin);
-			clientNetworkTask = new ClientNetworkTask(tcpConnectSocketIn, udpConnectSocketIn, tcpConnectSocketOut, udpConnectSocketOut, gameContext, this);
+			gameContext.setTextInPlayersBox("Connecting to server...");
+			try {
+				connectToSocket(tcpConnectSocketOut, &hintsTCPout, resultTCPout);
+				gameContext.addPlayer("OK 1");
+				connectToSocket(tcpConnectSocketIn, &hintsTCPin, resultTCPin);
+				gameContext.addPlayer("OK 2");
+				clientNetworkTask = new ClientNetworkTask(tcpConnectSocketIn, udpConnectSocketIn, tcpConnectSocketOut, udpConnectSocketOut, gameContext, this);
+				clientNetworkTask->run();
+			}
+			catch (NetworkException& e) {
+				gameContext.setTextInPlayersBox("Unable to connect to server!\nPlease restart an application and try again.\n\n" +
+					e.getMessage());
+				WSACleanup();
+			}
+			
+		}
+
+		void Client::initialize() {
+			int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+			if (iResult != 0) {
+				throw NetworkException("WSAStartup failed with error: " + intToStr(iResult));
+			}
+		}
+
+		void Client::stop() {
+			closesocket(udpConnectSocketIn);
+			closesocket(udpConnectSocketOut);
+			closesocket(tcpConnectSocketIn);
+			closesocket(tcpConnectSocketOut);
 		}

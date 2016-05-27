@@ -16,7 +16,7 @@ void Server::createSocket(SOCKET& m_socket, addrinfo& hints, addrinfo*& result, 
 		WSACleanup();
 	}
 	m_socket = INVALID_SOCKET;
-	m_socket = socket(result->ai_family, result->ai_socktype, protocol == IPPROTO_TCP ? result->ai_protocol : 0);
+	m_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 	if (m_socket == INVALID_SOCKET) {
 		freeaddrinfo(result);
 		throw NetworkException(std::string("Error at creating socket: ") + intToStr(WSAGetLastError()) + " port " + intToStr(port) + (protocol == IPPROTO_TCP ? " TCP " : " UDP "));
@@ -57,19 +57,18 @@ void Server::listenOnSocket(SOCKET listenSocket) {
 void Server::listenOnSockets() {
 	listenOnSocket(tcpListenSocketIn);
 	listenOnSocket(tcpListenSocketOut);
-	listenOnSocket(udpListenSocketIn);
-	listenOnSocket(udpListenSocketOut);
 }
 
 
-		Server::Server(GameContext& m_gameContext) : gameContext(m_gameContext) {
-			players = 0;
-			serverRunning = true;
-		}
+Server::Server(GameContext& m_gameContext) : gameContext(m_gameContext) {
+	players = 0;
+	serverRunning = true;
+	networkTasksLoopCounter = 0;
+}
 
-		Server::~Server() {
-			for (auto& networkTask : networkTasks) delete networkTask;
-		}
+Server::~Server() {
+	for (auto& networkTask : networkTasks) delete networkTask;
+}
 
 		int Server::initialize() {
 			int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -112,76 +111,125 @@ void Server::listenOnSockets() {
 			}
 		}
 
+		void Server::goBackToLobby() {
+			std::lock_guard<std::mutex> lockGuard(mutex);
+			players--;
+			gameContext.setGameState(GAME_LOBBY);
+			std::string gameInterruptedMessage = charToOneCharString(MESSAGE_GAME_INTERRUPTED);
+			broadcastMessage(IPPROTO_TCP, gameInterruptedMessage, ALL_PLAYERS);
+		}
+
 		void Server::stop() {
 			closeSocket(tcpListenSocketIn);
 			closeSocket(udpListenSocketOut);
 			closeSocket(tcpListenSocketOut);
 			closeSocket(udpListenSocketIn);
+			serverRunning = false;
 		}
 
 		std::string Server::getServerIp() {
-			return MessageReceiverSender::getPeerIp(tcpListenSocketIn);
+			return MessageReceiverSender::getLocalIp(tcpListenSocketIn);
+		}
+
+		void Server::listenUDP() {
+				try {
+					while (serverRunning) {
+						auto result = MessageReceiverSender::receiveUDPMessage(udpListenSocketIn);
+						std::string ipAddress = result.first;
+						std::string message = result.second;
+
+						std::lock_guard<std::mutex> networkTasksCollectionLock(mutexUDP);
+						for (int i = 0; i < networkTasks.size(); i++) {
+							if (ipAddress == networkTasks[i]->getClientIpAddress()) {
+								networkTasks[i]->pushUDPMessageToReceive(message);
+								i = networkTasks.size() + 1;
+							}
+						}
+					}
+				}
+				catch (NetworkException& e) {
+
+				}				
 		}
 
 		//this delegates consecutive connections to separate threads
 		//and the procedure itself should be fired in separate thread
-		void Server::acceptConnections() {
+		void Server::run() {
 			SOCKET clientSocketTCPin = INVALID_SOCKET;
-			SOCKET clientSocketUDPin = INVALID_SOCKET;
 			SOCKET clientSocketTCPout = INVALID_SOCKET;
-			SOCKET clientSocketUDPout = INVALID_SOCKET;
 
-			gameContext.setTextInPlayersBox("Listening on " + getServerIp() + "\n-----\n");
+			auto ipList = MessageReceiverSender::getLocalIps(tcpListenSocketIn);
+			std::string welcomeMessage = "Listening on ";
+			for (auto& ipAddress : ipList) {
+				welcomeMessage += "[" + ipAddress + "]\n";
+			}
+			welcomeMessage += "\n--------------------------------------------------\n";
+			gameContext.setTextInPlayersBox(welcomeMessage);
+			gameContext.addPlayer(getServerIp());
 			try {
-				while (true) {
+				while (serverRunning) {
 
 					if (players >= MAX_PLAYERS) {
 						//exit the lobby once we get all the players needed
 						gameContext.setGameState(GAME_PLAY);
-						break;
-					}
+						while (gameContext.getGameState() != GAME_LOBBY && serverRunning) {
+							//normal server work mode - in gameplay
+							for (int i = 0; i < networkTasks.size(); i++) {
+								if (!networkTasks[i]->getIsValidTask()) {
+									std::lock_guard<std::mutex> networkTasksCollectionLock(mutexUDP);
+									delete networkTasks[i];
+									auto it = std::find(networkTasks.begin(), networkTasks.end(), networkTasks[i]);
+									if (it != networkTasks.end()) {
+										networkTasks.erase(it);
+										i = 0;
+										continue;
+									}
+								}
 
-					clientSocketTCPin = accept(tcpListenSocketIn, NULL, NULL);
-					if (clientSocketTCPin == INVALID_SOCKET) {
-						closesocket(tcpListenSocketIn);
-						throw NetworkException(std::string("TCP accept failed: ") + intToStr(WSAGetLastError()));
-						WSACleanup();
-					}
-					clientSocketUDPin = accept(udpListenSocketIn, NULL, NULL);
-					if (clientSocketUDPin == INVALID_SOCKET) {
-						closesocket(udpListenSocketIn);
-						throw NetworkException(std::string("UDP accept failed: ") + intToStr(WSAGetLastError()));
-						WSACleanup();
-					}
-					clientSocketTCPout = accept(tcpListenSocketOut, NULL, NULL);
-					if (clientSocketTCPin == INVALID_SOCKET) {
-						closesocket(tcpListenSocketIn);
-						throw NetworkException(std::string("TCP accept failed: ") + intToStr(WSAGetLastError()));
-						WSACleanup();
-					}
-					clientSocketUDPout = accept(udpListenSocketOut, NULL, NULL);
-					if (clientSocketUDPin == INVALID_SOCKET) {
-						closesocket(udpListenSocketIn);
-						throw NetworkException(std::string("UDP accept failed: ") + intToStr(WSAGetLastError()));
-						WSACleanup();
-					}
-					if (players < MAX_PLAYERS) {
-						players++;
-						//server is always player of number 0
-						networkTasks.push_back(new ServerNetworkTask(clientSocketTCPin, clientSocketUDPin,
-							clientSocketTCPout, clientSocketUDPout, gameContext, this, players));
-						networkTasks[networkTasks.size() - 1]->run();
+								if (networkTasks[i]->hasOutcomingUDPMessages()) {
+									MessageReceiverSender::sendUDPMessage(udpListenSocketOut, DEFAULT_SERVER_PORT_UDP_OUT , networkTasks[i]->getClientIpAddress(),
+										networkTasks[i]->popUDPMessageToSend());
+								}
+							}
+						}
 					}
 					else {
-						disconnectSocket(clientSocketTCPin);
-						disconnectSocket(clientSocketUDPin);
-						disconnectSocket(clientSocketTCPout);
-						disconnectSocket(clientSocketUDPout);
+						clientSocketTCPin = accept(tcpListenSocketIn, NULL, NULL);
+						if (clientSocketTCPin == INVALID_SOCKET) {
+							closesocket(tcpListenSocketIn);
+							throw NetworkException(std::string("TCP in accept failed: ") + intToStr(WSAGetLastError()));
+							WSACleanup();
+						}
+						gameContext.addPlayer("OK 1");
+						clientSocketTCPout = accept(tcpListenSocketOut, NULL, NULL);
+						if (clientSocketTCPout == INVALID_SOCKET) {
+							closesocket(tcpListenSocketOut);
+							throw NetworkException(std::string("TCP out accept failed: ") + intToStr(WSAGetLastError()));
+							WSACleanup();
+						}
+						gameContext.addPlayer("OK 2");
+						if (players < MAX_PLAYERS) {
+							players++;
+							//server is always player of number 0
+							networkTasks.push_back(new ServerNetworkTask(clientSocketTCPin, udpListenSocketIn,
+								clientSocketTCPout, udpListenSocketOut, 
+								MessageReceiverSender::getPeerIpTCP(clientSocketTCPin) ,
+								gameContext, this, players));
+							networkTasks[networkTasks.size() - 1]->run();
+							gameContext.addPlayer("OK 3");
+						}
+						else {
+							disconnectSocket(clientSocketTCPin);
+							disconnectSocket(clientSocketTCPout);
+						}
 					}
 				}
+
 				}
 				catch (NetworkException& e) {
 					gameContext.setTextInPlayersBox(e.getMessage());
 				}
+
+				
 			
 		}

@@ -3,81 +3,100 @@
 class ServerNetworkTask {
 
 	SOCKET connectionSocketTCPin;
-	SOCKET connectionSocketUDPin;
 	SOCKET connectionSocketTCPout;
-	SOCKET connectionSocketUDPout;
 
-	std::thread* taskThreadTCPin;
-	std::thread* taskThreadUDPin;
-	std::thread* taskThreadTCPout;
-	std::thread* taskThreadUDPout;
+	std::thread taskThreadTCPin;
+	std::thread taskThreadTCPout;
+	std::thread taskThreadUDPin;
+	std::thread taskThreadUDPout;
 	GameContext& gameContext;
+
+	bool validNetworkTask;
 
 	Server* server;
 
 	char peerPlayerNumber;
+	std::string peerIpAddress;
 
-	static std::string receiveMessage(SOCKET m_connectionSocket) {
-		return MessageReceiverSender::receiveMessage(m_connectionSocket);
+	ThreadSafeQueue<std::string> tcpMessagesToBroadcast;
+	ThreadSafeQueue<std::string> udpMessagesToBroadcast;
+	ThreadSafeQueue<std::string> udpIncomingMessagesQueue;
+	ThreadSafeQueue<std::string> udpOutcomingMessagesQueue;
+
+	static std::string receiveMessage(SOCKET m_connectionSocket, ServerNetworkTask* networkTask) {
+		if (networkTask->validNetworkTask)
+			return MessageReceiverSender::receiveTCPMessage(m_connectionSocket);
 	}
+	
 
-	static void sendMessage(SOCKET m_connectionSocket, const char& messageType, const std::string& message) {
-		MessageReceiverSender::sendMessage(m_connectionSocket, messageType, message);
+	static void sendMessage(SOCKET m_connectionSocket, ServerNetworkTask* networkTask, const char& messageType, const std::string& message) {
+		if (networkTask->validNetworkTask)
+			MessageReceiverSender::sendTCPMessage(m_connectionSocket, MessageReceiverSender::createMessage(messageType, message));
 	}
 
 	static std::string getPeerIp(SOCKET m_connectionSocket) {
-		return MessageReceiverSender::getPeerIp(m_connectionSocket);
+		return MessageReceiverSender::getPeerIpTCP(m_connectionSocket);
 	}
 
 	static std::string getLocalIp(SOCKET m_connectionSocket) {
 		return MessageReceiverSender::getLocalIp(m_connectionSocket);
 	}
 
-	static void taskJobTCPIn(SOCKET m_connectionSocket, GameContext& gameContext,
-		const char& peerPlayerNumber, Server* server) {
+	static void taskJobTCPIn(ServerNetworkTask* networkTask) {
 		std::string receivedMessage;
 		while (true) {
-			receivedMessage = receiveMessage(m_connectionSocket);
-			auto got = messagesHandlers.find(receivedMessage[0]);
-			if (got != messagesHandlers.end()) {
-				got->second->execute(receivedMessage, gameContext, m_connectionSocket);
-				server->broadcastMessage(IPPROTO_TCP, receivedMessage, peerPlayerNumber);
+			receivedMessage = receiveMessage(networkTask->connectionSocketTCPin, networkTask);
+			if (receivedMessage != "") {
+				auto got = messagesHandlers.find(receivedMessage[0]);
+				if (got != messagesHandlers.end()) {
+					got->second->execute(receivedMessage, networkTask->gameContext);
+					networkTask->server->broadcastMessage(IPPROTO_TCP, receivedMessage, networkTask->peerPlayerNumber);
+				}
+				else {
+					throw NetworkException("Unkown message: " + receivedMessage);
+				}
 			}
 			else {
-				throw NetworkException("Unkown message: " + receivedMessage);
+				//client disconnected
+				networkTask->gameContext.removePlayer(getPeerIp(networkTask->connectionSocketTCPin));
+				networkTask->server->goBackToLobby();
+				networkTask->validNetworkTask = false;
+				break;
 			}
+			
 		}
 	}
 
-	static void taskJobTCPOut(SOCKET m_connectionSocket, GameContext& gameContext,
-		const char& peerPlayerNumber, Server* server) {
+	static void taskJobTCPOut(ServerNetworkTask* networkTask) {
 		while (true) {
-			while (gameContext.getGameState() != GAME_LOBBY);
-			gameContext.addPlayer(getPeerIp(m_connectionSocket));
-			sendMessage(m_connectionSocket, MESSAGE_PLAYER_ACCEPTED, peerPlayerNumber + "|" + gameContext.getBlocksDescription());
-			while (gameContext.getGameState() == GAME_LOBBY);
-			sendMessage(m_connectionSocket, MESSAGE_GAME_START, "");
-			while (gameContext.getGameState() == GAME_PLAY);
-			sendMessage(m_connectionSocket, MESSAGE_GAME_INTERRUPTED, "");
-			gameContext.removePlayer(getPeerIp(m_connectionSocket));
+			networkTask->gameContext.addPlayer(getPeerIp(networkTask->connectionSocketTCPout));
+			sendMessage(networkTask->connectionSocketTCPout, networkTask, MESSAGE_PLAYER_ACCEPTED, networkTask->peerPlayerNumber + "|" + networkTask->gameContext.getBlocksDescription());
+			networkTask->gameContext.addPlayer("sent message");
+			while (networkTask->gameContext.getGameState() == GAME_LOBBY);
+			sendMessage(networkTask->connectionSocketTCPout, networkTask, MESSAGE_GAME_START, "");
+			while (networkTask->gameContext.getGameState() == GAME_PLAY);
+			sendMessage(networkTask->connectionSocketTCPout, networkTask, MESSAGE_GAME_INTERRUPTED, "");
+			networkTask->gameContext.removePlayer(getPeerIp(networkTask->connectionSocketTCPout));
 			while (true);
 		}
 		
 	}
 
-	static void taskJobUDPIn(SOCKET m_connectionSocket, GameContext& gameContext,
-		const char& peerPlayerNumber, Server* server) {
+	static void taskJobUDPIn(ServerNetworkTask* networkTask) {
 		std::string receivedMessage;
 		while (true) {
-			receivedMessage = receiveMessage(m_connectionSocket);
-			auto got = messagesHandlers.find(receivedMessage[0]);
-			if (got != messagesHandlers.end()) {
-				got->second->execute(receivedMessage, gameContext, m_connectionSocket);
-				server->broadcastMessage(IPPROTO_UDP, receivedMessage, peerPlayerNumber);
+			if (!networkTask->udpIncomingMessagesQueue.empty()) {
+				receivedMessage = networkTask->udpIncomingMessagesQueue.pop();
+				auto got = messagesHandlers.find(receivedMessage[0]);
+				if (got != messagesHandlers.end()) {
+					got->second->execute(receivedMessage, networkTask->gameContext);
+					networkTask->server->broadcastMessage(IPPROTO_UDP, receivedMessage, networkTask->peerPlayerNumber);
+				}
+				else {
+					throw NetworkException("Unknown message: " + receivedMessage);
+				}
 			}
-			else {
-				throw NetworkException("Unknown message: " + receivedMessage);
-			}
+			
 		}
 	}
 
@@ -93,30 +112,29 @@ class ServerNetworkTask {
 
 
 
-	static void taskJobUDPOut(SOCKET m_connectionSocket, GameContext& gameContext,
-		const char& peerPlayerNumber, Server* server) {
+	static void taskJobUDPOut(ServerNetworkTask* networkTask) {
 		while (true) {
-			SDL_Event event = gameContext.getCurrentSDLEvent();
+			SDL_Event event = networkTask->gameContext.getCurrentSDLEvent();
 			switch (event.type) {
 			case SDL_KEYDOWN:
 				switch (event.key.keysym.sym) {
 				case SDLK_LEFT:
-					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_LEFT) + gameContext.getPlayerNumber());
+					networkTask->pushUDPMessageToSend(MessageReceiverSender::createMessage(MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_LEFT) + networkTask->gameContext.getPlayerNumber()));
 					break;
 				case SDLK_RIGHT:
-					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_RIGHT) + gameContext.getPlayerNumber());
+					networkTask->pushUDPMessageToSend(MessageReceiverSender::createMessage(MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_RIGHT) + networkTask->gameContext.getPlayerNumber()));
 					break;
 				case SDLK_DOWN:
-					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_DOWN) + gameContext.getPlayerNumber());
+					networkTask->pushUDPMessageToSend(MessageReceiverSender::createMessage(MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_DOWN) + networkTask->gameContext.getPlayerNumber()));
 					break;
 				case SDLK_UP:
-					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_UP) + gameContext.getPlayerNumber());
+					networkTask->pushUDPMessageToSend(MessageReceiverSender::createMessage(MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_UP) + networkTask->gameContext.getPlayerNumber()));
 					break;
 				case SDLK_ESCAPE:
-					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_ESCAPE) + gameContext.getPlayerNumber());
+					networkTask->pushUDPMessageToSend(MessageReceiverSender::createMessage(MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_ESCAPE) + networkTask->gameContext.getPlayerNumber()));
 					break;
 				case SDLK_SPACE:
-					sendMessage(m_connectionSocket, MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_SPACE) + gameContext.getPlayerNumber());
+					networkTask->pushUDPMessageToSend(MessageReceiverSender::createMessage(MESSAGE_PLAYER_PRESSED_KEY, toKeyCodeByte(SDLK_SPACE) + networkTask->gameContext.getPlayerNumber()));
 					break;
 				default:
 					break;
@@ -132,47 +150,73 @@ class ServerNetworkTask {
 	
 	public:
 		ServerNetworkTask(SOCKET m_connectionSocketTCPin, SOCKET m_connectionSocketUDPin,
-			SOCKET m_connectionSocketTCPout, SOCKET m_connectionSocketUDPout, GameContext& m_gameContext, Server* m_server, const char& m_peerPlayerNumber) : gameContext(m_gameContext) {
+			SOCKET m_connectionSocketTCPout, SOCKET m_connectionSocketUDPout, const std::string& m_peerIpAddress,
+			GameContext& m_gameContext, Server* m_server, const char& m_peerPlayerNumber) : gameContext(m_gameContext) {
 			connectionSocketTCPin = m_connectionSocketTCPin;
-			connectionSocketUDPin = m_connectionSocketUDPin;
 			connectionSocketTCPout = m_connectionSocketTCPout;
-			connectionSocketUDPout = m_connectionSocketUDPout;
-			taskThreadTCPin = NULL;
-			taskThreadUDPin = NULL;
-			taskThreadTCPout = NULL;
-			taskThreadUDPout = NULL;
 			peerPlayerNumber = m_peerPlayerNumber;
 			server = m_server;
+			validNetworkTask = true;
+			peerIpAddress = m_peerIpAddress;
+		}
+
+		void pushUDPMessageToBroadcast(const std::string& message) {
+			udpMessagesToBroadcast.emplace(message);
+		}
+
+		void pushTCPMessageToBroadcast(const std::string& message) {
+			tcpMessagesToBroadcast.emplace(message);
+		}
+
+		void pushUDPMessageToReceive(const std::string& message) {
+			udpIncomingMessagesQueue.emplace(message);
+		}
+
+		void pushUDPMessageToSend(const std::string& message) {
+			udpOutcomingMessagesQueue.emplace(message);
+		}
+
+		std::string popUDPMessageToSend() {
+			return udpOutcomingMessagesQueue.pop();
+		}
+
+		bool hasOutcomingUDPMessages() {
+			return !udpOutcomingMessagesQueue.empty();
+		}
+
+		std::string getClientIpAddress() {
+			return peerIpAddress;
 		}
 
 		~ServerNetworkTask() {
-			if (taskThreadTCPin) delete taskThreadTCPin;
-			if (taskThreadUDPin) delete taskThreadUDPin;
-			if (taskThreadTCPout) delete taskThreadTCPout;
-			if (taskThreadUDPout) delete taskThreadUDPout;
+
 		}
 
 		void s_sendMessage(const IPPROTO& protocol, const char& messageType, const std::string& message) {
 			if (protocol == IPPROTO_TCP)
-				MessageReceiverSender::sendMessage(connectionSocketTCPout, messageType, message);
+				MessageReceiverSender::sendTCPMessage(connectionSocketTCPout, MessageReceiverSender::createMessage(messageType, message));
 			else if (protocol == IPPROTO_UDP)
-				MessageReceiverSender::sendMessage(connectionSocketUDPout, messageType, message);
+				pushUDPMessageToSend(MessageReceiverSender::createMessage(messageType, message));
+		}
+
+		bool getIsValidTask() {
+			return validNetworkTask;
 		}
 
 		char getPlayerId() const {
 			return peerPlayerNumber;
 		}
 
+
+
 		void run() {
-			taskThreadTCPin  = new std::thread(ServerNetworkTask::taskJobTCPIn, connectionSocketTCPin, gameContext, peerPlayerNumber, server);
-			taskThreadUDPin  = new std::thread(ServerNetworkTask::taskJobUDPIn, connectionSocketUDPin, gameContext, peerPlayerNumber, server);
-			taskThreadTCPout = new std::thread(ServerNetworkTask::taskJobTCPOut, connectionSocketTCPout, gameContext, peerPlayerNumber, server);
-			taskThreadUDPout = new std::thread(ServerNetworkTask::taskJobUDPOut, connectionSocketUDPout, gameContext, peerPlayerNumber, server);
+			taskThreadTCPin  = std::thread(ServerNetworkTask::taskJobTCPIn, this);
+			taskThreadUDPin  = std::thread(ServerNetworkTask::taskJobUDPIn, this);
+			taskThreadTCPout = std::thread(ServerNetworkTask::taskJobTCPOut, this);
+			taskThreadUDPout = std::thread(ServerNetworkTask::taskJobUDPOut, this);
 		}
 
 		void notifyGameStateUpdate(const GAME_STATE& updatedGameState) {
 			gameContext.setGameState(updatedGameState);
 		}
-
-		
 };

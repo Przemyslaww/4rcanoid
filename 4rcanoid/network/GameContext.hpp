@@ -66,6 +66,10 @@ class GameContext {
 		return balls;
 	}
 
+	SDL_Window* getWindow() {
+		return window;
+	}
+
 	Paddle* getLeftPaddle() {
 		return paddleLeft;
 	}

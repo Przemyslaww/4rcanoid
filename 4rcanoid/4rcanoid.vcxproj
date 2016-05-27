@@ -132,7 +132,7 @@
     <ClCompile Include="video\Renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="collections\ThreadSafeStack.hpp" />
+    <ClInclude Include="collections\ThreadSafeQueue.hpp" />
     <ClInclude Include="exceptions\NetworkException.hpp" />
     <ClInclude Include="gui\PlayersTextBox.hpp" />
     <ClInclude Include="gui\TextBox.hpp" />

@@ -24,6 +24,8 @@
 #include <stdio.h>
 
 #pragma comment(lib, "Ws2_32.lib")
+#pragma comment (lib, "Mswsock.lib")
+#pragma comment (lib, "AdvApi32.lib")
 
 const std::string g_assetsFolder = "assets/";
 const std::string g_greenColor = "Green";
@@ -43,8 +45,10 @@ const int DEFAULT_SERVER_PORT_TCP_IN = 27015;
 const int DEFAULT_SERVER_PORT_UDP_IN = 27019;
 const int DEFAULT_SERVER_PORT_TCP_OUT = 27017;
 const int DEFAULT_SERVER_PORT_UDP_OUT = 27018;
-const int BUFFER_SIZE = 64;
+const int BUFFER_SIZE = 128;
 const int MAX_PLAYERS = 4;
+
+const char ALL_PLAYERS = 255;
 
 const SDL_Color whiteColorSDL = {127, 127, 127, 0 };
 const SDL_Color blackColorSDL = {0,0,0,0};
@@ -77,7 +81,7 @@ extern std::string intToStr(const int& arg);
 
 
 
-#include "collections/ThreadSafeStack.hpp"
+#include "collections/ThreadSafeQueue.hpp"
 
 #include "exceptions/NetworkException.hpp"
 

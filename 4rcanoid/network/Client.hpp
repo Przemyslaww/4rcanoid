@@ -11,6 +11,8 @@ class Client {
 	SOCKET tcpConnectSocketOut;
 	SOCKET udpConnectSocketOut;
 
+	WSAData wsaData;
+
 	addrinfo* resultTCPin;
 	addrinfo* resultUDPin;
 	addrinfo* resultTCPout;
@@ -33,8 +35,10 @@ class Client {
 	public:
 		Client(const std::string& m_ipAddress, GameContext& m_gameContext);
 		~Client();
+		void initialize();
 		void createTCPSockets();
 		void createUDPSockets();
 		void disconnectSocket(SOCKET m_socket);
 		void makeConnectionToServer();
+		void stop();
 };
