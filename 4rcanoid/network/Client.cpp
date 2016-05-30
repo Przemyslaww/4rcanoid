@@ -1,7 +1,7 @@
 #include "../header.hpp"
 
 void Client::createSocket(SOCKET& m_socket, addrinfo& hints, addrinfo*& result, const std::string& ipAddress, const IPPROTO& protocol, const int& port) {
-
+	if (protocol == IPPROTO_TCP) {
 		ZeroMemory(&hints, sizeof(hints));
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = protocol == IPPROTO_TCP ? SOCK_STREAM : SOCK_DGRAM;
@@ -14,12 +14,37 @@ void Client::createSocket(SOCKET& m_socket, addrinfo& hints, addrinfo*& result, 
 		}
 		m_socket = INVALID_SOCKET;
 		m_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-		if (m_socket == INVALID_SOCKET) {
+		if (m_socket == INVALID_SOCKET || m_socket == SOCKET_ERROR) {
 			freeaddrinfo(result);
 			throw NetworkException(std::string("Error at socket TCP: ") + intToStr(WSAGetLastError()));
 			WSACleanup();
 		}
+	}
+	else {
+		m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+		if (m_socket == SOCKET_ERROR || m_socket == INVALID_SOCKET) {
+			throw NetworkException(std::string("Error at socket UDP: ") + intToStr(WSAGetLastError()));
+		}
+	}
+		
 
+}
+
+void Client::bindUDPSocket(SOCKET& listenSocket, const int& port) {
+	struct sockaddr_in server;
+	server.sin_family = AF_INET;
+	server.sin_addr.s_addr = htonl(INADDR_ANY);
+	server.sin_port = htons(port);
+	int Result = bind(listenSocket, (SOCKADDR *)& server, sizeof(server));
+	if (Result == SOCKET_ERROR) {
+		throw NetworkException(std::string("bind UDP failed with error: ") + intToStr(WSAGetLastError()));
+	}
+}
+
+void Client::bindSockets() {
+	bindUDPSocket(udpConnectSocketIn, 0);
+	listeningUdpPort = PortsHandler::getSocketPortNumber(udpConnectSocketIn);
+	bindUDPSocket(udpConnectSocketOut, 0);
 }
 
 void Client::connectToSocket(SOCKET& m_socket, addrinfo* ptr, addrinfo* result) {
@@ -41,6 +66,8 @@ void Client::connectToSocket(SOCKET& m_socket, addrinfo* ptr, addrinfo* result) 
 		Client::Client(const std::string& m_ipAddress, GameContext& m_gameContext) : gameContext(m_gameContext) {
 			clientNetworkTask = NULL;
 			ipAddress = m_ipAddress;
+			clientRunning = true;
+			listeningUdpPort = -1;
 		}
 
 		Client::~Client() {
@@ -70,10 +97,8 @@ void Client::connectToSocket(SOCKET& m_socket, addrinfo* ptr, addrinfo* result) 
 			gameContext.setTextInPlayersBox("Connecting to server...");
 			try {
 				connectToSocket(tcpConnectSocketOut, &hintsTCPout, resultTCPout);
-				gameContext.addPlayer("OK 1");
 				connectToSocket(tcpConnectSocketIn, &hintsTCPin, resultTCPin);
-				gameContext.addPlayer("OK 2");
-				clientNetworkTask = new ClientNetworkTask(tcpConnectSocketIn, udpConnectSocketIn, tcpConnectSocketOut, udpConnectSocketOut, gameContext, this);
+				clientNetworkTask = new ClientNetworkTask(tcpConnectSocketIn, udpConnectSocketIn, tcpConnectSocketOut, udpConnectSocketOut, gameContext, listeningUdpPort, this);
 				clientNetworkTask->run();
 			}
 			catch (NetworkException& e) {
@@ -96,4 +121,15 @@ void Client::connectToSocket(SOCKET& m_socket, addrinfo* ptr, addrinfo* result) 
 			closesocket(udpConnectSocketOut);
 			closesocket(tcpConnectSocketIn);
 			closesocket(tcpConnectSocketOut);
+			clientRunning = false;
+			if (clientNetworkTask) clientNetworkTask->join();
+			printf("Client stopped\n");
+		}
+
+		bool Client::getIsClientRunning() {
+			return clientRunning;
+		}
+
+		std::string Client::getServerIp() {
+			return ipAddress;
 		}

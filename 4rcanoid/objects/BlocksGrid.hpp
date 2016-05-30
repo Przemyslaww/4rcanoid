@@ -60,6 +60,7 @@ class BlocksGrid {
 			for (auto& block : blocks) {
 				delete block;
 			}
+			blocks.clear();
 
 			std::vector<std::string> blockLines = split(blocksDescription, '\n');
 

@@ -56,6 +56,8 @@ class GameContext {
 	PROGRAM_STATE getProgramState() const { return *programState; }
 	void setGameState(const GAME_STATE& m_gameState) { *gameState = m_gameState; }
 	void movePlayerPaddleBy(const char& playerNumber, const int& x, const int& y) {
+		//printf("Move player %d by x %d y %d\n", (int)playerNumber, x, y);
+
 		if (playerNumber == PLAYER_DOWN_NUMBER) paddleDown->moveBy(x, y);
 		else if (playerNumber == PLAYER_LEFT_NUMBER) paddleLeft->moveBy(x, y);
 		else if (playerNumber == PLAYER_RIGHT_NUMBER) paddleRight->moveBy(x, y);

@@ -95,7 +95,7 @@
     <Link>
       <AdditionalLibraryDirectories>..\SDL\lib\x64;..\SDLttf\lib\x64;C:\Users\Przemek\Documents\Visual Studio 2015\Projects\4rcanoid\SDL\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -127,6 +127,7 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="network\Client.cpp" />
+    <ClCompile Include="network\messages\MessageHandlers.cpp" />
     <ClCompile Include="network\Server.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="video\Renderer.cpp" />
@@ -146,6 +147,8 @@
     <ClInclude Include="network\messages\MessageHandlers.hpp" />
     <ClInclude Include="network\messages\messages_ids.hpp" />
     <ClInclude Include="network\messages\NetworkMessageHandler.hpp" />
+    <ClInclude Include="network\NetworkTask.hpp" />
+    <ClInclude Include="network\PortsHandler.hpp" />
     <ClInclude Include="network\Server.hpp" />
     <ClInclude Include="network\ServerNetworkTask.hpp" />
     <ClInclude Include="objects\Ball.hpp" />

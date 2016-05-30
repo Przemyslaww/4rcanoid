@@ -5,6 +5,7 @@ std::unordered_map<char, NetworkMessageHandler*> messagesHandlers;
 void initMessagesHandlers() {
 	messagesHandlers.emplace(MESSAGE_PLAYER_ACCEPTED, new MessagePlayerAcceptedHandler());
 	messagesHandlers.emplace(MESSAGE_GAME_START  , new MessageGameStartHandler()  );
+	messagesHandlers.emplace(MESSAGE_PLAYER_LISTENING_UDP_PORT, new MessagePlayerListeningUdpPortHandler());
 	messagesHandlers.emplace(MESSAGE_GAME_INTERRUPTED, new MessageGameInterruptedHandler());
 	messagesHandlers.emplace(MESSAGE_PLAYER_PRESSED_KEY, new MessagePlayerPressedKeyHandler());
 }
@@ -139,18 +140,26 @@ std::string getInputFromUser(const std::string& message, ImageLoader& imageLoade
 }
 
 void clientProgram(GameContext& gameContext) {
+	printf("CLIENT\n");
 	SDL_Texture* backgroundImage = gameContext.getImageLoader()->loadSurface(g_assetsFolder + "background.bmp", *gameContext.getRenderer());
 
 	bool quit = false;
 	Timer timer;
-
-	std::string ipAddress = getInputFromUser("Server IP address", *gameContext.getImageLoader(), gameContext.getWindow(), *gameContext.getRenderer());
+	
+	IPValidator ipValidator;
+	std::string ipAddress;
+	while (true) {
+		ipAddress = getInputFromUser("Server IP address", *gameContext.getImageLoader(), gameContext.getWindow(), *gameContext.getRenderer());
+		if (ipValidator.validate(ipAddress)) break;
+	}
+	
 	
 	Client client(ipAddress, gameContext);
 	try {
 		client.initialize();
 		client.createTCPSockets();
 		client.createUDPSockets();
+		client.bindSockets();
 	}
 	catch (NetworkException& e) {
 		gameContext.setTextInPlayersBox("An application encountered an unexpected error: \n"
@@ -280,12 +289,15 @@ void clientProgram(GameContext& gameContext) {
 	}
 
 	client.stop();
-	connectThread.join();
+	if (connectThread.joinable()) connectThread.join();
+	printf("connectThread stopped\n");
 }
 
 
 
 void serverProgram(GameContext& gameContext) {
+	printf("SERVER\n");
+
 	SDL_Texture* backgroundImage = gameContext.getImageLoader()->loadSurface(g_assetsFolder + "background.bmp", *gameContext.getRenderer());
 	bool quit = false;
 	Timer timer;
@@ -302,13 +314,9 @@ void serverProgram(GameContext& gameContext) {
 			"\n\nFor further help please contact us:\n przmiku1@gmail.com\n");
 	}
 
-	std::thread acceptThread([&]() {
-		server.run();
-	});
-
-	std::thread listenUDPThread([&]() {
-		server.listenUDP();
-	});
+	std::thread acceptThread(&Server::run, &server);
+	std::thread listenUDPThread(&Server::listenUDP, &server);
+	std::thread sendUDPThread(&Server::sendUDP, &server);
 
 	while (!quit) {
 
@@ -426,8 +434,9 @@ void serverProgram(GameContext& gameContext) {
 		timer.limitFramerate(SCREEN_FPS, SCREEN_TICKS_PER_FRAME);
 	}
 	server.stop();
-	acceptThread.join();
-	listenUDPThread.join();
+	if (acceptThread.joinable()) acceptThread.join();
+	if (listenUDPThread.joinable()) listenUDPThread.join();
+	if (sendUDPThread.joinable()) sendUDPThread.join();
 	return;
 }
 
@@ -471,7 +480,7 @@ int main(int argc, char* args[])
 	
 	GAME_STATE gameState = GAME_LOBBY;
 
-	char playerNumber = 0;
+	char playerNumber = 1;
 
 	TextBox playersListTextBox(SCREEN_WIDTH / 2 - 600 / 2, SCREEN_HEIGHT / 2 - 500 / 2, 600, 500, whiteColorSDL, blackColorSDL, renderer, "");
 	GameContext gameContext(window, blocksDescription, &programState, &renderer,
@@ -486,5 +495,5 @@ int main(int argc, char* args[])
 	}
 
 	exit(window, imageLoader, renderer);
-	return 0;
+	SDL_Quit();
 }

@@ -1,5 +1,19 @@
 #pragma once
 
+class TextInputValidator {
+	public:
+		virtual bool validate(const std::string&) = 0;
+};
+
+class IPValidator : TextInputValidator {
+	public:
+		bool validate(const std::string& text) {
+			struct sockaddr_in sa;
+			int result = inet_pton(AF_INET, text.c_str(), &(sa.sin_addr));
+			return result != 0;
+		}
+};
+
 class TextInputDialog {
 
 	std::string text;

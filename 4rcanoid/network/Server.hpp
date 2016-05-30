@@ -36,7 +36,8 @@ class Server {
 	void createSocket(SOCKET& m_socket, addrinfo& hints, addrinfo*& result, const IPPROTO& protocol, const int& port);
 	void createTCPSockets();
 	void createUDPSockets();
-	void bindSocket(SOCKET listenSocket, addrinfo* result);
+	void bindTCPSocket(SOCKET listenSocket, addrinfo* result);
+	void bindUDPSocket(SOCKET, const int&);
 	void listenOnSocket(SOCKET listenSocket);
 	public:
 		Server(GameContext& m_gameContext);
@@ -53,4 +54,7 @@ class Server {
 		void run();
 		void listenUDP();
 		void goBackToLobby();
+		bool getIsServerRunning();
+		void sendUDP();
+		ServerNetworkTask* getNetworkTaskAssignedToIp(const std::string&);
 };

@@ -20,6 +20,6 @@ class SDLSetup {
 			imageLoader.freeSurfaces();
 			renderer.destroySDLRenderer();
 			SDL_DestroyWindow(window);
-			SDL_Quit();
+			//SDL_Quit();
 		}
 };

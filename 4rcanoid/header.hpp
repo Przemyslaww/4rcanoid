@@ -33,10 +33,10 @@ const std::string g_blueColor = "Blue";
 const std::string g_redColor = "Red";
 const std::string g_yellowColor = "Yellow";
 
-const char PLAYER_DOWN_NUMBER = 0;
-const char PLAYER_UP_NUMBER = 1;
-const char PLAYER_LEFT_NUMBER = 2;
-const char PLAYER_RIGHT_NUMBER = 3;
+const char PLAYER_DOWN_NUMBER = 1;
+const char PLAYER_UP_NUMBER = 2;
+const char PLAYER_LEFT_NUMBER = 3;
+const char PLAYER_RIGHT_NUMBER = 4;
 
 enum PROGRAM_STATE {PROGRAM_EXIT, PROGRAM_SERVER, PROGRAM_CLIENT};
 enum GAME_STATE {GAME_LOBBY, GAME_PLAY};
@@ -45,8 +45,11 @@ const int DEFAULT_SERVER_PORT_TCP_IN = 27015;
 const int DEFAULT_SERVER_PORT_UDP_IN = 27019;
 const int DEFAULT_SERVER_PORT_TCP_OUT = 27017;
 const int DEFAULT_SERVER_PORT_UDP_OUT = 27018;
-const int BUFFER_SIZE = 128;
-const int MAX_PLAYERS = 4;
+const int BUFFER_SIZE = 64;
+//const int MAX_PLAYERS = 4;
+const int MAX_PLAYERS = 2;
+
+extern std::string toKeyCodeByte(const long long unsigned& keyCode);
 
 const char ALL_PLAYERS = 255;
 
@@ -106,16 +109,22 @@ class NetworkMessageHandler;
 
 extern std::unordered_map<char, NetworkMessageHandler*> messagesHandlers;
 
+class NetworkTask;
+class ServerNetworkTask;
+class ClientNetworkTask;
+
+#include "network/PortsHandler.hpp"
+
 #include "network/messages/messages_ids.hpp"
 #include "network/messages/NetworkMessageHandler.hpp"
 #include "network/messages/MessageReceiverSender.hpp"
 
-class ServerNetworkTask;
-class ClientNetworkTask;
+
 
 #include "network/Server.hpp"
 #include "network/Client.hpp"
 
+#include "network/NetworkTask.hpp"
 #include "network/ServerNetworkTask.hpp"
 #include "network/ClientNetworkTask.hpp"
 

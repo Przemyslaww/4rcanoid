@@ -41,6 +41,7 @@ class MessageReceiverSender {
 
 		static void sendTCPMessage(SOCKET socket, const std::string& message) {
 			char buffer[BUFFER_SIZE];
+
 			for (int i = 0; i < message.length(); i++) {
 				buffer[i] = message[i];
 			}
@@ -48,7 +49,7 @@ class MessageReceiverSender {
 			int iSendResult = send(socket, buffer, BUFFER_SIZE, 0);
 			if (iSendResult == SOCKET_ERROR) {
 				closesocket(socket);
-				throw NetworkException("Send failed: " + intToStr(WSAGetLastError()));
+				throw NetworkException("Send TCP failed: " + intToStr(WSAGetLastError()));
 				WSACleanup();
 			}
 		}
@@ -69,13 +70,13 @@ class MessageReceiverSender {
 			int iSendResult = sendto(socket, buffer, message.length(), 0, (sockaddr*)&si_other, sizeof(si_other));
 			if (iSendResult == SOCKET_ERROR) {
 				closesocket(socket);
-				throw NetworkException("Send failed: " + intToStr(WSAGetLastError()));
+				throw NetworkException("Send UDP failed: " + intToStr(WSAGetLastError()));
 				WSACleanup();
 			}
 		}
 
 		static std::string createMessage(const char& messageType, const std::string& messageContent) {
-			std::string result = "" + messageType;
+			std::string result = charToOneCharString(messageType);
 			result += messageContent;
 			return result;
 		}
@@ -83,6 +84,9 @@ class MessageReceiverSender {
 		static std::string receiveTCPMessage(SOCKET socket) {
 			char buffer[BUFFER_SIZE] = { 0 };
 			int iResult = recv(socket, buffer, BUFFER_SIZE, 0);
+			if (iResult == SOCKET_ERROR) {
+				throw NetworkException("Receive TCP failed: " + intToStr(WSAGetLastError()));
+			} 
 			return buffer;
 		}
 
@@ -91,15 +95,24 @@ class MessageReceiverSender {
 			return ip;
 		}
 
-		static std::pair<std::string, std::string> receiveUDPMessage(SOCKET socket) {
+		static std::pair<std::string, std::string> receiveUDPMessage(SOCKET socket, const int& port, const std::string& ipAddress = "") {
 			struct sockaddr_in clientInfo;
+		
 			int slen = sizeof(clientInfo);
 
+			if (ipAddress != "") {
+				memset((char *)&clientInfo, 0, sizeof(clientInfo));
+				clientInfo.sin_family = AF_INET;
+				clientInfo.sin_port = htons(port);
+				clientInfo.sin_addr.S_un.S_addr = inet_addr(ipAddress.c_str());
+			}
+		
 			char buffer[BUFFER_SIZE];
 			int result = recvfrom(socket, buffer, BUFFER_SIZE, 0, (sockaddr*)&clientInfo,
 				&slen);
 
 			if (result == SOCKET_ERROR) {
+				printf("DATA UDP: slen %d, buffer_size %d, port %d, address %s\n", slen, BUFFER_SIZE, port, ipAddress.c_str());
 				throw NetworkException("recvfrom() failed with error code: " + intToStr(WSAGetLastError()));
 			}
 
